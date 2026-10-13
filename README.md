@@ -14,7 +14,7 @@ also appears in the text list.
 
 ## Status
 
-1.0.0 is the first usable build. All five floors launch with no labels.
+1.0.1 is the current release. All five floors launch with no labels.
 
 ## Notes for staff
 
@@ -40,6 +40,11 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 1.0.1 (2026-10-13)
+
+- Print: smaller map so a floor's key and list fit on the same page more often; the key no longer
+  splits across pages.
 
 ### 1.0.0 (2026-10-13)
 

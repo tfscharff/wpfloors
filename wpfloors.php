@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Floor Maps
  * Description:       Floor maps of the library. Staff add every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Author:            Madeleine Clark Wallace Library
  * License:           GPL-2.0+
  * Requires at least: 5.6
@@ -305,7 +305,8 @@ function wpfloors_page_css() {
   .wpfloors-nav,.wpfloors-full-link{display:none}
   .wpfloors-floor{break-before:page;page-break-before:always;margin:0}
   .wpfloors-floor:first-of-type{break-before:auto;page-break-before:auto}
-  .wpfloors-svg{max-height:6.5in}
+  .wpfloors-svg{max-height:5.5in}
+  .wpfloors-key{break-inside:avoid;page-break-inside:avoid}
   .wpfloors-map{border:0;padding:0}
   .wpfloors-group{break-inside:avoid;page-break-inside:avoid}
 }
