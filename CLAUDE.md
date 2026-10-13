@@ -15,11 +15,13 @@ REST namespace and the CSS classes. Never use an `mcw` prefix, even though the s
 
 Call them **floor maps**, never "floor plans": in code, UI text, docs and commit messages.
 
-## Status: handoff, nothing built yet
+## Status
 
-The design was agreed with the user on 2026-10-13, in a session in `Documents\wheatonlibrary`.
-The user said to skip the written spec and plan. This file is the brief. The repo holds only this
-file, the README, the LICENSE and the source drawings.
+1.0.0 built 2026-10-13. The drawings were traced in photo pixel coordinates, so each floor's
+`viewBox` is a crop of its photo. The Stacks archives board sits in a `translate(160 831)` group
+that joins it at the match line. Tests: `php tests/run.php [preview-dir]`. It stubs WordPress, and
+with a folder it writes preview pages you can screenshot with headless Chrome. Headless Chrome won't
+go below about 500px wide, so check 320px inside a 320px iframe.
 
 ## Source drawings
 
