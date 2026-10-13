@@ -4,11 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-**Floor Maps**: a single-file WordPress plugin (`mcw-floor-maps.php`) for the Wallace Library site
+**Floor Maps**: a single-file WordPress plugin (`wpfloors.php`) for the Wallace Library site
 (library.wheatoncollege.edu, WP Engine). It shows clean, label-free drawings of the library's five
 floors, and staff add every label themselves in wp-admin. It is the fourth in-house plugin, after
 `wphours` (Library Hours), `wprooms` (Reserve a Room) and the librarians plugin. Copy their
 conventions, especially `Documents\wphours\CLAUDE.md`.
+
+Name everything `wpfloors`: the file, the zip folder, the `wpfloors_` PHP prefix, the option, the
+REST namespace and the CSS classes. Never use an `mcw` prefix, even though the sister plugins do.
 
 Call them **floor maps**, never "floor plans": in code, UI text, docs and commit messages.
 
@@ -131,7 +134,7 @@ Don't add any of these unless the user asks:
   Pick heredoc or nowdoc on purpose. A heredoc (`<<<HTML`) around JS makes PHP try to interpolate
   every `$` in the script.
 - A portable PHP CLI is at `C:\Users\thoma\bin\php\php.exe`. Run `php -l` on every change:
-  `C:\Users\thoma\bin\php\php.exe -l mcw-floor-maps.php`
+  `C:\Users\thoma\bin\php\php.exe -l wpfloors.php`
 - Test sanitize, the REST handlers and the shortcode output against a stub harness that mocks the
   WordPress functions. Include junk input and stray HTML in names and notes.
 - After the user installs it, check the live `/about/floor-maps/`:
@@ -151,16 +154,16 @@ Every code change ships as a versioned release, not just a commit:
 2. Add a dated entry to `## Changelog` in `README.md`.
 3. Commit and push to `main` on `github.com/tfscharff/wpfloors`. Commit and push after every change.
 4. Create the release with `gh release create vX.Y.Z`, attaching a zip whose top-level folder is
-   `mcw-floor-maps/`. That folder contains `mcw-floor-maps.php`, `README.md` and `LICENSE`. Leave
+   `wpfloors/`. That folder contains `wpfloors.php`, `README.md` and `LICENSE`. Leave
    `source/` out of the zip. Copy the zip to `C:\Users\thoma\Downloads`. `.gitignore` already
    ignores `build/` and `*.zip`, so stage the build there (PowerShell 7):
    ```powershell
    Remove-Item -Recurse -Force build -ErrorAction SilentlyContinue
-   New-Item -ItemType Directory -Force build\mcw-floor-maps | Out-Null
-   Copy-Item mcw-floor-maps.php, README.md, LICENSE build\mcw-floor-maps\
-   Compress-Archive -Path build\mcw-floor-maps -DestinationPath build\mcw-floor-maps.zip -Force
-   gh release create vX.Y.Z build\mcw-floor-maps.zip --title vX.Y.Z --notes "..."
-   Copy-Item build\mcw-floor-maps.zip $HOME\Downloads\
+   New-Item -ItemType Directory -Force build\wpfloors | Out-Null
+   Copy-Item wpfloors.php, README.md, LICENSE build\wpfloors\
+   Compress-Archive -Path build\wpfloors -DestinationPath build\wpfloors.zip -Force
+   gh release create vX.Y.Z build\wpfloors.zip --title vX.Y.Z --notes "..."
+   Copy-Item build\wpfloors.zip $HOME\Downloads\
    ```
 5. The user installs it at Plugins → Add New → Upload Plugin → Replace current.
 
