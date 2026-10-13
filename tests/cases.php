@@ -191,7 +191,8 @@ ok( '<p>No floor maps yet.</p>' === wpfloors_shortcode(), 'old 1.0 data shows no
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ] = array( 'floors' => array( fl(), fl( array( 'slug' => 'b', 'name' => 'Basement', 'image' => 8 ) ), fl( array( 'slug' => 'c', 'name' => 'Attic' ) ) ), 'labels' => array() );
 $html = wpfloors_shortcode();
 ok( 3 === substr_count( $html, 'Nothing listed on this floor yet.' ), 'empty floors say nothing listed' );
-ok( 3 === substr_count( $html, '<h2 ' ) && 3 === substr_count( $html, 'role="img"' ) && 3 === substr_count( $html, 'Everything shown is listed below.' ), 'an H2 and a role=img map per floor' );
+ok( false !== strpos( $html, '<nav class="wpfloors-nav" aria-labelledby="wpfloors-nav-h"><h2 id="wpfloors-nav-h">On this page</h2>' ), 'floor links in an "On this page" box' );
+ok( 4 === substr_count( $html, '<h2 ' ) && 3 === substr_count( $html, 'role="img"' ) && 3 === substr_count( $html, 'Everything shown is listed below.' ), 'an H2 and a role=img map per floor' );
 ok( 3 === substr_count( $html, 'Open full-size map' ), 'full-size link per floor' );
 ok( false === strpos( $html, '<script' ) && false === strpos( $html, '<!--' ), 'no JavaScript, no comments' );
 ok( false === stripos( $html, 'tabindex' ) && false === strpos( $html, '<button' ) && false === strpos( $html, '<input' ), 'nothing interactive on the map' );

@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Floor Maps
  * Description:       Accessible floor maps for a library or any building. Staff upload an SVG map for each floor and add every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
- * Version:           2.2.0
+ * Version:           2.3.0
  * Author:            Madeleine Clark Wallace Library
  * License:           GPL-2.0+
  * Requires at least: 5.6
@@ -365,7 +365,7 @@ function wpfloors_shortcode() {
 	}
 	$from = function_exists( 'get_the_ID' ) ? (int) get_the_ID() : 0;
 	$out  = '<style>' . wpfloors_svg_css() . wpfloors_page_css() . '</style><div class="wpfloors">';
-	$out .= '<nav class="wpfloors-nav" aria-label="Floors"><ul>';
+	$out .= '<nav class="wpfloors-nav" aria-labelledby="wpfloors-nav-h"><h2 id="wpfloors-nav-h">On this page</h2><ul>';
 	foreach ( $data['floors'] as $f ) {
 		$out .= '<li><a href="#wpfloors-' . esc_attr( $f['slug'] ) . '">' . esc_html( $f['name'] ) . '</a></li>';
 	}
@@ -435,7 +435,9 @@ function wpfloors_floor_body( $floor, $labels, $h, $full_url ) {
 function wpfloors_page_css() {
 	return <<<'CSS'
 .wpfloors{overflow-wrap:anywhere}
-.wpfloors-nav ul{display:flex;flex-wrap:wrap;gap:.4em 1.4em;list-style:none;margin:0 0 1em;padding:0}
+.wpfloors-nav{border:1px solid #aaa;padding:.75rem 1rem;margin:0 0 2rem}
+.wpfloors-nav h2{font-size:1.125rem;line-height:1.3;margin:0 0 .5rem}
+.wpfloors-nav ul{display:flex;flex-wrap:wrap;gap:.35rem 1.4em;list-style:none;margin:0;padding:0}
 .wpfloors-floor{margin:0 0 2.5em}
 .wpfloors-map{border:1px solid #767676;background:#fff;padding:4px}
 .wpfloors-key{margin:.6em 0}

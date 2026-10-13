@@ -16,7 +16,7 @@ also appears in the text list.
 
 ## Status
 
-2.2.0 is the current release. A fresh install has no floors and no maps.
+2.3.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -64,6 +64,10 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.3.0 (2026-10-13)
+
+- The floor links at the top of the page are in an "On this page" box.
 
 ### 2.2.0 (2026-10-13)
 
