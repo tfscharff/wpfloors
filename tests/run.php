@@ -39,9 +39,22 @@ function home_url( $p = '' ) { return 'https://example.test' . $p; }
 function add_query_arg( $args, $url ) { return $url . '?' . http_build_query( $args ); }
 function get_the_ID() { return 42; }
 function get_bloginfo( $k ) { return 'language' === $k ? 'en-US' : 'Wallace Library'; }
-$GLOBALS['wpf_images'] = array( 7 => array( 'https://example.test/up/third-floor.png', 1200, 800 ) );
-function wp_attachment_is_image( $id ) { return isset( $GLOBALS['wpf_images'][ $id ] ); }
-function wp_get_attachment_image_src( $id, $size ) { return isset( $GLOBALS['wpf_images'][ $id ] ) ? $GLOBALS['wpf_images'][ $id ] : false; }
+// Fake Media Library: attachment ID => [mime, file]. SVG files are written to a temp folder.
+$GLOBALS['wpf_dir'] = sys_get_temp_dir() . '/wpfloors-tests';
+@mkdir( $GLOBALS['wpf_dir'] );
+file_put_contents( $GLOBALS['wpf_dir'] . '/third.svg', '<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><rect width="1200" height="800" fill="#fff"/></svg>' );
+file_put_contents( $GLOBALS['wpf_dir'] . '/sized.svg', '<svg xmlns="http://www.w3.org/2000/svg" width="300px" height="150"><path d="M0 0H10"/></svg>' );
+file_put_contents( $GLOBALS['wpf_dir'] . '/nosize.svg', '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0H10"/></svg>' );
+file_put_contents( $GLOBALS['wpf_dir'] . '/photo.png', 'PNG' );
+$GLOBALS['wpf_media'] = array(
+	7  => array( 'image/svg+xml', 'third.svg' ),
+	8  => array( 'image/svg+xml', 'sized.svg' ),
+	9  => array( 'image/svg+xml', 'nosize.svg' ),
+	10 => array( 'image/png', 'photo.png' ),
+);
+function get_post_mime_type( $id ) { return isset( $GLOBALS['wpf_media'][ $id ] ) ? $GLOBALS['wpf_media'][ $id ][0] : false; }
+function get_attached_file( $id ) { return isset( $GLOBALS['wpf_media'][ $id ] ) ? $GLOBALS['wpf_dir'] . '/' . $GLOBALS['wpf_media'][ $id ][1] : false; }
+function wp_get_attachment_url( $id ) { return isset( $GLOBALS['wpf_media'][ $id ] ) ? 'https://example.test/up/' . $GLOBALS['wpf_media'][ $id ][1] : false; }
 function wp_unslash( $v ) { return $v; }
 function wp_enqueue_media() {}
 function rest_ensure_response( $v ) { return $v; }

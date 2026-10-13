@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name:       Floor Maps
- * Description:       Accessible floor maps for a library or any building. Staff add floors (a built-in drawing or an image from the Media Library) and every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
- * Version:           1.1.0
+ * Description:       Accessible floor maps for a library or any building. Staff upload an SVG map for each floor and add every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
+ * Version:           2.0.0
  * Author:            Madeleine Clark Wallace Library
  * License:           GPL-2.0+
  * Requires at least: 5.6
@@ -14,33 +14,11 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 define( 'WPFLOORS_OPTION', 'wpfloors' );
 define( 'WPFLOORS_MAX_FLOORS', 30 );
 define( 'WPFLOORS_MAX_LABELS', 300 ); // per floor
+define( 'WPFLOORS_MAX_SVG_BYTES', 5 * 1024 * 1024 );
 
 /* ------------------------------------------------------------------ *
- *  Built-in drawings and label types
+ *  Label types
  * ------------------------------------------------------------------ */
-
-/**
- * The built-in drawings (Wallace Library, Wheaton College MA), in their default page order.
- * viewBox is "minX minY width height". Any other building uses images instead.
- */
-function wpfloors_builtins() {
-	return array(
-		'main'             => array( 'name' => 'Main Level',        'viewBox' => '6 26 840 734' ),
-		'periodicals'      => array( 'name' => 'Periodicals Level', 'viewBox' => '0 88 834 735' ),
-		'stacks'           => array( 'name' => 'Stacks Level',      'viewBox' => '18 57 1334 1889' ),
-		'first-mezzanine'  => array( 'name' => 'First Mezzanine',   'viewBox' => '2 26 430 562' ),
-		'second-mezzanine' => array( 'name' => 'Second Mezzanine',  'viewBox' => '488 26 330 552' ),
-	);
-}
-
-/** Floors for a site upgrading from 1.0, which only had the five built-in drawings. */
-function wpfloors_default_floors() {
-	$out = array();
-	foreach ( wpfloors_builtins() as $key => $b ) {
-		$out[] = array( 'slug' => $key, 'name' => $b['name'], 'map' => $key, 'image' => 0 );
-	}
-	return $out;
-}
 
 /**
  * Label types. Color never carries meaning: each type has its own marker shape and letter,
@@ -70,13 +48,14 @@ function wpfloors_groups() {
 }
 
 /* ------------------------------------------------------------------ *
- *  Data: one option, {floors: [...], labels: {floor slug: [...]}}.
+ *  Data: one option, {floors: [{slug, name, image}], labels: {floor slug: [...]}}.
+ *  image is the attachment ID of the floor's SVG map.
  *  Every write goes through wpfloors_sanitize().
  * ------------------------------------------------------------------ */
 
 add_filter( 'sanitize_option_' . WPFLOORS_OPTION, 'wpfloors_sanitize' );
 
-/** The saved floors and labels. A new site starts with no floors. */
+/** The saved floors and labels. A new install starts with no floors. */
 function wpfloors_get() {
 	return wpfloors_sanitize( get_option( WPFLOORS_OPTION, array( 'floors' => array(), 'labels' => array() ) ) );
 }
@@ -105,28 +84,22 @@ function wpfloors_slug( $v ) {
 
 /** Whitelist and validate incoming data so only clean floors and labels are stored. Drops bad rows. */
 function wpfloors_sanitize( $in ) {
-	$in = is_array( $in ) ? $in : array();
-	if ( ! array_key_exists( 'floors', $in ) ) {
-		// 1.0 stored only labels, keyed by the five built-in floors.
-		$in = array( 'floors' => wpfloors_default_floors(), 'labels' => $in );
-	}
-	$builtins = wpfloors_builtins();
-	$floors   = array();
-	$seen     = array();
-	foreach ( is_array( $in['floors'] ) ? $in['floors'] : array() as $f ) {
+	$in     = is_array( $in ) ? $in : array();
+	$floors = array();
+	$seen   = array();
+	foreach ( isset( $in['floors'] ) && is_array( $in['floors'] ) ? $in['floors'] : array() as $f ) {
 		if ( count( $floors ) >= WPFLOORS_MAX_FLOORS ) { break; }
 		if ( ! is_array( $f ) ) { continue; }
 		$name = wpfloors_text( isset( $f['name'] ) ? $f['name'] : '', 60 );
 		if ( '' === $name ) { continue; }
-		$map = isset( $f['map'] ) && is_string( $f['map'] ) && ( 'image' === $f['map'] || isset( $builtins[ $f['map'] ] ) ) ? $f['map'] : 'image';
-		$img = 'image' === $map && isset( $f['image'] ) && is_numeric( $f['image'] ) ? max( 0, (int) $f['image'] ) : 0;
+		$img  = isset( $f['image'] ) && is_numeric( $f['image'] ) ? max( 0, (int) $f['image'] ) : 0;
 		$base = wpfloors_slug( isset( $f['slug'] ) ? $f['slug'] : '' );
 		if ( '' === $base ) { $base = wpfloors_slug( $name ); }
 		if ( '' === $base ) { $base = 'floor'; }
 		$slug = $base;
 		for ( $n = 2; isset( $seen[ $slug ] ); $n++ ) { $slug = $base . '-' . $n; }
 		$seen[ $slug ] = true;
-		$floors[]      = array( 'slug' => $slug, 'name' => $name, 'map' => $map, 'image' => $img );
+		$floors[]      = array( 'slug' => $slug, 'name' => $name, 'image' => $img );
 	}
 
 	$types  = wpfloors_types();
@@ -164,19 +137,98 @@ function wpfloors_sanitize( $in ) {
 	return array( 'floors' => $floors, 'labels' => $labels );
 }
 
-/** A floor's uploaded image as [url, width, height], or null when there isn't a usable one. */
-function wpfloors_image( $id ) {
-	if ( ! $id || ! wp_attachment_is_image( $id ) ) { return null; }
-	$src = wp_get_attachment_image_src( $id, 'full' );
-	if ( ! $src || empty( $src[1] ) || empty( $src[2] ) ) { return null; }
-	return array( 'url' => $src[0], 'w' => (int) $src[1], 'h' => (int) $src[2] );
+/* ------------------------------------------------------------------ *
+ *  SVG maps
+ * ------------------------------------------------------------------ */
+
+/**
+ * Width and height of an SVG from its root element: the viewBox size, or else numeric width and
+ * height. Null when neither is there.
+ */
+function wpfloors_svg_size( $xml ) {
+	if ( ! is_string( $xml ) || ! preg_match( '/<svg\b[^>]*>/i', $xml, $m ) ) { return null; }
+	$tag = $m[0];
+	$num = '([-+]?[\d.]+(?:e[-+]?\d+)?)';
+	if ( preg_match( '/\sviewBox\s*=\s*["\']\s*' . $num . '[\s,]+' . $num . '[\s,]+' . $num . '[\s,]+' . $num . '\s*["\']/i', $tag, $v ) && (float) $v[3] > 0 && (float) $v[4] > 0 ) {
+		return array( (float) $v[3], (float) $v[4] );
+	}
+	if ( preg_match( '/\swidth\s*=\s*["\']\s*([\d.]+)(px)?\s*["\']/i', $tag, $w ) && preg_match( '/\sheight\s*=\s*["\']\s*([\d.]+)(px)?\s*["\']/i', $tag, $h ) && (float) $w[1] > 0 && (float) $h[1] > 0 ) {
+		return array( (float) $w[1], (float) $h[1] );
+	}
+	return null;
 }
 
-/** Image details for every image floor, keyed by attachment ID (for the admin editor). */
+/**
+ * Why an uploaded SVG can't be used, or '' when it's fine. An SVG can carry scripts that run if
+ * someone opens the file directly, so anything that could run code or load something from
+ * elsewhere is refused. The file itself is never changed; a normal drawing export passes.
+ */
+function wpfloors_svg_problem( $xml ) {
+	if ( ! is_string( $xml ) || '' === trim( $xml ) ) { return 'The file is empty.'; }
+	if ( strlen( $xml ) > WPFLOORS_MAX_SVG_BYTES ) { return 'The SVG is larger than 5 MB.'; }
+	if ( ! preg_match( '/<svg\b/i', $xml ) ) { return 'The file isn’t an SVG drawing.'; }
+	if ( ! wpfloors_svg_size( $xml ) ) { return 'The SVG needs a viewBox (or a width and height) so the map can be sized.'; }
+	$rules = array(
+		'/<!ENTITY/i'                                                                 => 'entity declarations',
+		'/<\s*(script|foreignObject|iframe|embed|object|audio|video|handler|listener)\b/i' => 'scripts or embedded content',
+		'/\son[a-z]+\s*=/i'                                                           => 'event handlers (on… attributes)',
+		'/(java|vb)script\s*:/i'                                                      => 'script links',
+		'/\bhref\s*=\s*["\']\s*(?!#|data:image\/(png|jpe?g|gif|webp);)/i'              => 'links to other files or pages',
+		'/@import/i'                                                                  => 'CSS imports',
+		'/url\(\s*["\']?\s*(?!#)/i'                                                   => 'CSS that loads other files',
+	);
+	foreach ( $rules as $re => $what ) {
+		if ( preg_match( $re, $xml ) ) {
+			return 'For security, map SVGs can’t contain ' . $what . '. Export the drawing again as a plain SVG and upload that.';
+		}
+	}
+	return '';
+}
+
+/** A floor's SVG map as [url, w, h], or null when the attachment isn't a usable SVG. */
+function wpfloors_image( $id ) {
+	if ( ! $id || 'image/svg+xml' !== get_post_mime_type( $id ) ) { return null; }
+	$file = get_attached_file( $id );
+	if ( ! $file || ! is_readable( $file ) || filesize( $file ) > WPFLOORS_MAX_SVG_BYTES ) { return null; }
+	$size = wpfloors_svg_size( (string) file_get_contents( $file ) );
+	$url  = wp_get_attachment_url( $id );
+	if ( ! $size || ! $url ) { return null; }
+	return array( 'url' => $url, 'w' => $size[0], 'h' => $size[1] );
+}
+
+/* Let editors upload SVG maps. Every SVG upload is checked by wpfloors_svg_problem() first. */
+add_filter( 'upload_mimes', function ( $mimes ) {
+	if ( current_user_can( 'edit_pages' ) ) { $mimes['svg'] = 'image/svg+xml'; }
+	return $mimes;
+} );
+
+add_filter( 'wp_check_filetype_and_ext', function ( $data, $file, $filename ) {
+	if ( current_user_can( 'edit_pages' ) && preg_match( '/\.svg$/i', $filename ) ) {
+		$data['ext']  = 'svg';
+		$data['type'] = 'image/svg+xml';
+	}
+	return $data;
+}, 10, 3 );
+
+add_filter( 'wp_handle_upload_prefilter', 'wpfloors_check_upload' );
+
+/** Refuse unsafe or unusable SVG uploads with a message the Media Library shows. */
+function wpfloors_check_upload( $file ) {
+	if ( ! isset( $file['name'], $file['tmp_name'] ) || ! preg_match( '/\.svgz?$/i', $file['name'] ) ) { return $file; }
+	if ( preg_match( '/\.svgz$/i', $file['name'] ) ) {
+		$file['error'] = 'Compressed SVG (.svgz) isn’t supported. Upload a plain .svg file.';
+		return $file;
+	}
+	$problem = wpfloors_svg_problem( is_readable( $file['tmp_name'] ) ? (string) file_get_contents( $file['tmp_name'] ) : '' );
+	if ( '' !== $problem ) { $file['error'] = $problem; }
+	return $file;
+}
+
+/** SVG details for every floor's map, keyed by attachment ID (for the admin editor). */
 function wpfloors_images( $floors ) {
 	$out = array();
 	foreach ( $floors as $f ) {
-		if ( 'image' === $f['map'] && ( $img = wpfloors_image( $f['image'] ) ) ) { $out[ $f['image'] ] = $img; }
+		if ( $img = wpfloors_image( $f['image'] ) ) { $out[ $f['image'] ] = $img; }
 	}
 	return (object) $out;
 }
@@ -214,21 +266,19 @@ function wpfloors_num( $n ) {
 }
 
 /**
- * A floor's map: its viewBox (string and numbers) and the SVG markup that draws it, or null when
- * the floor has no usable map yet.
+ * A floor's map: its viewBox (string and numbers) and the markup that draws it, or null when the
+ * floor has no usable map yet. The SVG is drawn with <image>, which never runs its scripts or
+ * loads anything it links to.
  */
 function wpfloors_map( $floor ) {
-	$builtins = wpfloors_builtins();
-	if ( isset( $builtins[ $floor['map'] ] ) ) {
-		$vb = $builtins[ $floor['map'] ]['viewBox'];
-		return array( 'viewBox' => $vb, 'vb' => array_map( 'floatval', explode( ' ', $vb ) ), 'body' => wpfloors_drawing( $floor['map'] ) );
-	}
 	$img = wpfloors_image( $floor['image'] );
 	if ( ! $img ) { return null; }
+	$w = wpfloors_num( $img['w'] );
+	$h = wpfloors_num( $img['h'] );
 	return array(
-		'viewBox' => '0 0 ' . $img['w'] . ' ' . $img['h'],
-		'vb'      => array( 0.0, 0.0, (float) $img['w'], (float) $img['h'] ),
-		'body'    => '<image href="' . esc_url( $img['url'] ) . '" x="0" y="0" width="' . $img['w'] . '" height="' . $img['h'] . '"/>',
+		'viewBox' => '0 0 ' . $w . ' ' . $h,
+		'vb'      => array( 0.0, 0.0, $img['w'], $img['h'] ),
+		'body'    => '<image href="' . esc_url( $img['url'] ) . '" x="0" y="0" width="' . $w . '" height="' . $h . '"/>',
 	);
 }
 
@@ -270,17 +320,10 @@ function wpfloors_svg( $map, $labels, $aria_label ) {
 	return $out . '</g></svg>';
 }
 
-/** Shared styles for the drawings and markers. Walls are dark on a light floor (well over 3:1). */
+/** Shared styles for the maps and markers. */
 function wpfloors_svg_css() {
 	return <<<'CSS'
 .wpfloors-svg{display:block;width:100%;height:auto;max-height:85vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-.wpfloors-svg .fp{fill:#f6f4ee}
-.wpfloors-svg .w,.wpfloors-svg .i,.wpfloors-svg .t{fill:none;stroke:#2b2b2b;stroke-linecap:square}
-.wpfloors-svg .w{stroke-width:8}.wpfloors-svg .i{stroke-width:5}.wpfloors-svg .t{stroke-width:3}
-.wpfloors-svg .s{fill:#2b2b2b}
-.wpfloors-svg .d{fill:none;stroke:#555;stroke-width:1.5}
-.wpfloors-svg .st{fill:none;stroke:#2b2b2b;stroke-width:1.5}
-.wpfloors-svg .el{fill:none;stroke:#2b2b2b;stroke-width:2}
 .wpfloors-svg .mk path{fill:#fff;stroke:#000;stroke-width:.14;stroke-linejoin:round}
 .wpfloors-svg .mk .lt{fill:#000;font-weight:700;text-anchor:middle}
 .wpfloors-svg .mk .nm{fill:#000;font-weight:600;stroke:#fff;stroke-width:.4;stroke-linejoin:round;paint-order:stroke}
@@ -448,11 +491,7 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
 
 function wpfloors_admin_page() {
 	if ( ! current_user_can( 'edit_pages' ) ) { return; }
-	$data     = wpfloors_get();
-	$builtins = array();
-	foreach ( wpfloors_builtins() as $key => $b ) {
-		$builtins[] = array( 'key' => $key, 'name' => $b['name'] );
-	}
+	$data  = wpfloors_get();
 	$types = array();
 	foreach ( wpfloors_types() as $slug => $t ) {
 		$types[] = array_merge( array( 'slug' => $slug ), $t );
@@ -460,7 +499,6 @@ function wpfloors_admin_page() {
 	$cfg = array(
 		'root'     => esc_url_raw( rest_url( 'wpfloors/v1/labels' ) ),
 		'nonce'    => wp_create_nonce( 'wp_rest' ),
-		'builtins' => $builtins,
 		'types'    => $types,
 		'floors'   => $data['floors'],
 		'labels'   => (object) $data['labels'],
@@ -468,16 +506,9 @@ function wpfloors_admin_page() {
 	);
 
 	echo '<div class="wrap"><h1>Floor Maps</h1>';
-	echo '<p style="max-width:720px">Set up your floors, then add labels to each map. Nothing changes on the website until you click <strong>Save</strong>. Show the maps on any page with the shortcode <code>[floor_maps]</code>.</p>';
+	echo '<p style="max-width:720px">Add your floors and upload an SVG map for each one, then add labels to each map. Nothing changes on the website until you click <strong>Save</strong>. Show the maps on any page with the shortcode <code>[floor_maps]</code>.</p>';
 	echo '<style>' . wpfloors_svg_css() . '</style>'; // phpcs:ignore WordPress.Security.EscapeOutput
 	echo wpfloors_admin_markup(); // phpcs:ignore WordPress.Security.EscapeOutput
-	// Built-in drawings, cloned by the editor when a floor uses one.
-	echo '<div hidden>';
-	foreach ( wpfloors_builtins() as $key => $b ) {
-		$map = wpfloors_map( array( 'map' => $key, 'image' => 0 ) );
-		echo '<div class="wpfloors-tpl" data-map="' . esc_attr( $key ) . '">' . wpfloors_svg( $map, array(), '' ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput
-	}
-	echo '</div>';
 	// JSON_HEX_TAG keeps "</script>" or "<!--" in a name from breaking out of this tag.
 	echo '<script>window.WPFLOORS_ADMIN=' . wp_json_encode( $cfg, JSON_HEX_TAG | JSON_HEX_AMP ) . ';</script>'; // phpcs:ignore WordPress.Security.EscapeOutput
 	echo wpfloors_admin_script(); // phpcs:ignore WordPress.Security.EscapeOutput
@@ -516,9 +547,9 @@ function wpfloors_admin_markup() {
 </style>
 <div id="wpfloors-admin">
   <h2 id="wpfloors-floors-h">Floors</h2>
-  <p class="hint">Floors appear on the page in this order. Each floor uses a built-in drawing or an image from the Media Library. For your own image, use a clean drawing of the floor with <strong>no words on it</strong> and dark walls on a light background. Add every room name here as a label instead, so everyone can read the list under the map, including people using screen readers.</p>
+  <p class="hint">Floors appear on the page in this order. Each floor needs a map: an SVG file from the Media Library. Use a clean drawing of the floor with <strong>no words on it</strong> and dark walls on a light background (at least 3:1 contrast). Add every room name here as a label instead, so everyone can read the list under the map, including people using screen readers.</p>
   <table class="widefat striped" aria-labelledby="wpfloors-floors-h">
-    <thead><tr><th scope="col">Name</th><th scope="col">Map</th><th scope="col">Actions</th></tr></thead>
+    <thead><tr><th scope="col">Name</th><th scope="col">Map (SVG)</th><th scope="col">Actions</th></tr></thead>
     <tbody id="wpfloors-floors"></tbody>
   </table>
   <p><button type="button" class="button" id="wpfloors-add-floor">Add a floor</button></p>
@@ -572,10 +603,9 @@ function wpfloors_admin_script() {
 "use strict";
 var C=window.WPFLOORS_ADMIN;if(!C)return;
 var NS="http://www.w3.org/2000/svg";
-var floors=C.floors,labels=C.labels||{},images=C.images||{},types={},builtinName={};
+var floors=C.floors,labels=C.labels||{},images=C.images||{},types={};
 var cur=floors.length?floors[0].slug:null,form=null,moving=null,dirty=false,saving=false,svg=null,vb=null;
 C.types.forEach(function(t){types[t.slug]=t;});
-C.builtins.forEach(function(b){builtinName[b.key]=b.name;});
 function $(id){return document.getElementById(id);}
 function floorOf(slug){for(var i=0;i<floors.length;i++)if(floors[i].slug===slug)return floors[i];return null;}
 function list(){if(!cur)return [];return labels[cur]||(labels[cur]=[]);}
@@ -591,18 +621,31 @@ function status(msg,bad){var s=$("wpfloors-status");s.textContent=msg;s.style.co
 function markDirty(){dirty=true;status("You have unsaved changes. Click Save to put them on the website.",false);}
 
 /* ---------- floors ---------- */
-function mapOptions(sel,f){
-  C.builtins.forEach(function(b){var o=document.createElement("option");o.value=b.key;o.textContent="Built-in drawing: "+b.name;if(f.map===b.key)o.selected=true;sel.appendChild(o);});
-  var o=document.createElement("option");o.value="image";o.textContent="Image from the Media Library";if(f.map==="image")o.selected=true;sel.appendChild(o);
+/* Same rules as the PHP wpfloors_svg_size(): the viewBox size, or else numeric width and height. */
+function svgSize(t){
+  var m=/<svg\b[^>]*>/i.exec(t);if(!m)return null;var tag=m[0],n="([-+]?[\\d.]+(?:e[-+]?\\d+)?)";
+  var v=new RegExp("\\sviewBox\\s*=\\s*[\"']\\s*"+n+"[\\s,]+"+n+"[\\s,]+"+n+"[\\s,]+"+n+"\\s*[\"']","i").exec(tag);
+  if(v&&+v[3]>0&&+v[4]>0)return [+v[3],+v[4]];
+  var w=/\swidth\s*=\s*["']\s*([\d.]+)(px)?\s*["']/i.exec(tag),h=/\sheight\s*=\s*["']\s*([\d.]+)(px)?\s*["']/i.exec(tag);
+  if(w&&h&&+w[1]>0&&+h[1]>0)return [+w[1],+h[1]];
+  return null;
 }
 function chooseImage(f,opener){
   if(!window.wp||!wp.media){status("The Media Library isn't available on this page. Reload and try again.",true);return;}
-  var frame=wp.media({title:"Choose a map image for "+f.name,button:{text:"Use this image"},library:{type:"image"},multiple:false});
+  var frame=wp.media({title:"Choose an SVG map for "+f.name,button:{text:"Use this map"},library:{type:"image/svg+xml"},multiple:false});
   frame.on("select",function(){
     var a=frame.state().get("selection").first().toJSON();
-    if(!a.width||!a.height){status("That file isn't an image the map can use. Choose a PNG, JPG or GIF.",true);return;}
-    images[a.id]={url:a.url,w:a.width,h:a.height};f.map="image";f.image=a.id;markDirty();renderFloors();if(f.slug===cur)renderStage();
-    setMode("Map image set for "+f.name+".");
+    if(a.mime!=="image/svg+xml"){status("Choose an SVG file. Other image types can't be used as maps.",true);return;}
+    status("Reading the SVG\u2026",false);
+    var x=new XMLHttpRequest();x.open("GET",a.url);
+    x.onload=function(){
+      var size=x.status>=200&&x.status<300?svgSize(x.responseText):null;
+      if(!size){status("That SVG has no viewBox or size, so it can't be used as a map. Export it again with a viewBox.",true);return;}
+      images[a.id]={url:a.url,w:size[0],h:size[1]};f.image=a.id;markDirty();renderFloors();if(f.slug===cur)renderStage();
+      setMode("Map set for "+f.name+".");
+    };
+    x.onerror=function(){status("Couldn't read that SVG. Try again.",true);};
+    x.send();
   });
   frame.on("close",function(){if(opener&&document.body.contains(opener))opener.focus();});
   frame.open();
@@ -615,17 +658,10 @@ function renderFloors(){
     var t0=document.createElement("td"),inp=document.createElement("input");inp.type="text";inp.maxLength=60;inp.value=f.name;inp.setAttribute("aria-label","Name of floor "+(i+1));
     inp.oninput=function(){f.name=inp.value;if(f.isNew){var old=f.slug;f.slug=uniqueSlug(slugify(inp.value),f);if(old!==f.slug){labels[f.slug]=labels[old]||[];delete labels[old];if(cur===old)cur=f.slug;}}renderFloorSelect();markDirty();};
     t0.appendChild(inp);tr.appendChild(t0);
-    var t1=document.createElement("td"),sel=document.createElement("select");sel.setAttribute("aria-label","Map for "+(f.name||"floor "+(i+1)));mapOptions(sel,f);
-    sel.onchange=function(){f.map=sel.value;if(f.map!=="image")f.image=0;markDirty();renderFloors();if(f.slug===cur)renderStage();};
-    t1.appendChild(sel);
-    if(f.map==="image"){
-      var wrap=document.createElement("div");wrap.style.marginTop="6px";
-      var im=images[f.image];
-      if(im){var th=document.createElement("img");th.className="thumb";th.src=im.url;th.alt="";wrap.appendChild(th);}
-      wrap.appendChild(btn(im?"Change image":"Choose image",(im?"Change image for ":"Choose image for ")+f.name,function(e){chooseImage(f,e.currentTarget);}));
-      if(!im){var w=document.createElement("span");w.textContent="No image yet.";wrap.appendChild(w);}
-      t1.appendChild(wrap);
-    }
+    var t1=document.createElement("td"),im=images[f.image];
+    if(im){var th=document.createElement("img");th.className="thumb";th.src=im.url;th.alt="";t1.appendChild(th);}
+    t1.appendChild(btn(im?"Change SVG":"Choose SVG",(im?"Change SVG map for ":"Choose SVG map for ")+f.name,function(e){chooseImage(f,e.currentTarget);}));
+    if(!im){var w=document.createElement("span");w.textContent="No map yet.";t1.appendChild(w);}
     tr.appendChild(t1);
     var t2=document.createElement("td");
     var up=btn("Move up","Move "+f.name+" up",function(){move(i,-1,"up");});up.disabled=i===0;t2.appendChild(up);
@@ -649,10 +685,10 @@ function deleteFloor(i){
   $("wpfloors-add-floor").focus();
 }
 function addFloor(){
-  var f={slug:"",name:"New floor",map:"image",image:0,isNew:true};f.slug=uniqueSlug("new-floor",f);
+  var f={slug:"",name:"New floor",image:0,isNew:true};f.slug=uniqueSlug("new-floor",f);
   floors.push(f);labels[f.slug]=[];markDirty();renderFloors();renderFloorSelect();
   var rows=$("wpfloors-floors").querySelectorAll("tr"),inp=rows[rows.length-1].querySelector("input");inp.focus();inp.select();
-  setMode("Added a floor. Type its name, then choose its map.");
+  setMode("Added a floor. Type its name, then choose its SVG map.");
 }
 function renderFloorSelect(){
   var fs=$("wpfloors-floor");fs.innerHTML="";
@@ -663,22 +699,18 @@ function renderFloorSelect(){
 
 /* ---------- the map for the chosen floor ---------- */
 function buildSvg(f){
-  if(f.map==="image"){
-    var im=images[f.image];if(!im)return null;
-    var s=svgEl("svg",{"class":"wpfloors-svg",viewBox:"0 0 "+im.w+" "+im.h,role:"img","aria-label":f.name+" floor map. Click to place a label, or type its position in the form.",focusable:"false"});
-    s.appendChild(svgEl("image",{href:im.url,x:0,y:0,width:im.w,height:im.h}));
-    s.appendChild(svgEl("g",{"class":"wpfloors-labels","aria-hidden":"true"}));
-    return s;
-  }
-  var t=document.querySelector('.wpfloors-tpl[data-map="'+f.map+'"] svg');if(!t)return null;
-  var c=t.cloneNode(true);c.setAttribute("aria-label",f.name+" floor map. Click to place a label, or type its position in the form.");return c;
+  var im=images[f.image];if(!im)return null;
+  var s=svgEl("svg",{"class":"wpfloors-svg",viewBox:"0 0 "+num(im.w)+" "+num(im.h),role:"img","aria-label":f.name+" floor map. Click to place a label, or type its position in the form.",focusable:"false"});
+  s.appendChild(svgEl("image",{href:im.url,x:0,y:0,width:num(im.w),height:num(im.h)}));
+  s.appendChild(svgEl("g",{"class":"wpfloors-labels","aria-hidden":"true"}));
+  return s;
 }
 function renderStage(){
   var st=$("wpfloors-stage");st.innerHTML="";svg=null;vb=null;
   var f=cur?floorOf(cur):null,p=document.createElement("p");p.className="empty";
   if(!f){p.textContent="Add a floor above to start.";st.appendChild(p);return;}
   svg=buildSvg(f);
-  if(!svg){p.textContent="Choose a map for "+f.name+" above before adding labels.";st.appendChild(p);$("wpfloors-add").disabled=true;return;}
+  if(!svg){p.textContent="Choose an SVG map for "+f.name+" above before adding labels.";st.appendChild(p);$("wpfloors-add").disabled=true;return;}
   $("wpfloors-add").disabled=false;
   var b=svg.getAttribute("viewBox").split(/\s+/).map(parseFloat);vb=b;
   svg.addEventListener("click",onMapClick);st.appendChild(svg);drawMarkers();
@@ -731,7 +763,7 @@ function renderRows(){
 }
 function showFloor(slug){closeForm(false);moving=null;setMode("");cur=slug;renderFloorSelect();renderStage();renderRows();}
 function openForm(id,x,y,opener){
-  if(!svg){status("Choose a map for this floor first.",true);return;}
+  if(!svg){status("Choose an SVG map for this floor first.",true);return;}
   moving=null;
   var lb=id?find(id):null;
   form={id:id,opener:opener||null};
@@ -797,7 +829,7 @@ function save(){
   if(form){status("Finish or cancel the label you're editing first.",true);return;}
   for(var i=0;i<floors.length;i++)if(!String(floors[i].name).replace(/\s+/g,"")){status("Every floor needs a name.",true);$("wpfloors-floors").querySelectorAll("input")[i].focus();return;}
   saving=true;status("Saving…",false);
-  var out=floors.map(function(f){return {slug:f.slug,name:f.name,map:f.map,image:f.image||0};});
+  var out=floors.map(function(f){return {slug:f.slug,name:f.name,image:f.image||0};});
   var x=new XMLHttpRequest();
   x.open("POST",C.root);x.setRequestHeader("Content-Type","application/json");x.setRequestHeader("X-WP-Nonce",C.nonce);
   x.onload=function(){
@@ -834,356 +866,4 @@ renderFloors();renderFloorSelect();renderStage();renderRows();
 })();
 </script>
 HTML;
-}
-
-/* ------------------------------------------------------------------ *
- *  The drawings. Hand-traced from the August 2022 floor plan deck photos,
- *  straightened by eye. No text on purpose: every label comes from staff.
- *  Classes: fp floor, w outer wall, i inner wall, t thin partition, s solid
- *  (pillars, columns), d door swing, st stairs, el elevator.
- * ------------------------------------------------------------------ */
-
-function wpfloors_drawing( $slug ) {
-	switch ( $slug ) {
-		case 'main':             $svg = wpfloors_drawing_main(); break;
-		case 'periodicals':      $svg = wpfloors_drawing_periodicals(); break;
-		case 'stacks':           $svg = wpfloors_drawing_stacks(); break;
-		case 'first-mezzanine':  $svg = wpfloors_drawing_first_mezzanine(); break;
-		case 'second-mezzanine': $svg = wpfloors_drawing_second_mezzanine(); break;
-		default:                 return '';
-	}
-	// Drop the source comments and line breaks from the page output.
-	return preg_replace( array( '/<!--.*?-->/s', '/\s*\n\s*/' ), array( '', '' ), $svg );
-}
-
-function wpfloors_drawing_main() {
-	return <<<'SVG'
-<path class="fp" d="M31 210H397V94H336V46H462V94H706V222H704V462H825V558H691V742H597V692H384V742H290V566H31Z"/>
-<!-- exterior -->
-<path class="w" d="M47 210H390M31 225V566H290V742H388V692H404M404 692H470"/>
-<path class="w" d="M336 94V46H400M420 46H462V94H540M560 94H706V222M704 222V462H825V558H691V742H597V692H505"/>
-<path class="w" d="M336 94H397V97"/>
-<path class="w" d="M397 118V210"/>
-<!-- restroom + elevator, top -->
-<path class="i" d="M397 46V58M397 78V94"/>
-<rect class="el" x="424" y="50" width="34" height="40"/><path class="el" d="M424 50L458 90M458 50L424 90"/>
-<path class="i" d="M424 46V60M424 82V94"/>
-<!-- stair tower -->
-<path class="i" d="M400 120H430L455 148V198"/>
-<rect class="s" x="393" y="198" width="25" height="18"/>
-<rect class="s" x="432" y="198" width="36" height="18"/>
-<rect class="s" x="512" y="198" width="28" height="18"/>
-<rect class="s" x="555" y="198" width="155" height="22"/>
-<path class="d" d="M548 198A16 16 0 0 0 532 214"/>
-<rect class="st" x="462" y="98" width="72" height="24"/><path class="st" d="M470 98V122M478 98V122M486 98V122M494 98V122M502 98V122M510 98V122M518 98V122M526 98V122M462 122L486 98"/>
-<rect class="st" x="566" y="98" width="128" height="98"/><rect class="st" x="572" y="126" width="116" height="66"/>
-<path class="st" d="M574 98V126M582 98V126M590 98V126M626 98V126M634 98V126M642 98V126M650 98V126M658 98V126M666 98V126M682 98V126M690 98V126"/>
-<!-- reading / reference room -->
-<path class="d" d="M47 210A16 16 0 0 0 31 226"/>
-<path class="d" d="M325 210A15 15 0 0 1 340 225"/>
-<path class="t" d="M325 205V214M340 205V214"/>
-<rect class="st" x="56" y="214" width="38" height="40"/><path class="st" d="M62 214V254M68 214V254M74 214V254M80 214V254M86 214V254M56 230H94M56 236H94"/>
-<path class="w" d="M34 258H140"/><rect class="s" x="125" y="213" width="13" height="32"/>
-<path class="d" d="M138 245A12 12 0 0 1 126 257"/>
-<rect class="s" x="245" y="330" width="8" height="9"/>
-<path class="w" d="M386 210V330M386 358V432"/>
-<path class="d" d="M390 330A14 14 0 0 1 404 344M390 358A14 14 0 0 0 404 344"/>
-<rect class="s" x="345" y="432" width="47" height="20"/>
-<path class="i" d="M388 452V488H420"/>
-<path class="i" d="M100 446H318M318 446V440"/>
-<path class="d" d="M320 446A20 20 0 0 1 340 466"/>
-<!-- small rooms, lower left -->
-<path class="t" d="M104 446V472M104 480V498H150"/>
-<path class="d" d="M108 452A12 12 0 0 0 120 464"/>
-<path class="i" d="M150 446V566"/>
-<path class="i" d="M34 500H80M78 500V566"/>
-<path class="d" d="M76 506A16 16 0 0 1 60 522"/>
-<!-- Woolley classroom east wall + closet -->
-<path class="i" d="M316 446V496L304 510V528"/>
-<path class="d" d="M304 528A16 16 0 0 1 320 544"/>
-<path class="t" d="M298 536H318V562M298 536V548"/>
-<path class="d" d="M322 548A14 14 0 0 1 336 562"/>
-<path class="w" d="M290 566H318M337 566H470"/>
-<!-- circulation office -->
-<path class="i" d="M388 566V650"/>
-<path class="d" d="M392 690A18 18 0 0 1 406 672"/>
-<path class="i" d="M388 692V700"/>
-<!-- circulation desk / entrance -->
-<path class="i" d="M404 570V630"/>
-<path class="i" d="M400 647H470V692M404 647V665"/>
-<path class="d" d="M472 692A16 16 0 0 1 488 676M505 692A16 16 0 0 0 489 676"/>
-<path class="i" d="M508 692V647H590"/>
-<path class="w" d="M510 566H590V548"/>
-<path class="d" d="M592 568A20 20 0 0 1 612 548"/>
-<!-- stairs, south-east -->
-<path class="i" d="M610 566H691M691 566V650M610 646H691M612 566V600"/>
-<rect class="st" x="616" y="576" width="50" height="66"/><rect class="st" x="626" y="604" width="44" height="22"/>
-<path class="st" d="M622 576V604M628 576V604M634 576V604M640 576V604M646 576V604M652 576V604M658 576V604M634 626V642M640 626V642M646 626V642M652 626V642M658 626V642M616 604L666 576"/>
-<path class="d" d="M596 646A20 20 0 0 1 616 666"/>
-<path class="i" d="M597 650V692"/>
-<!-- atrium core -->
-<path class="i" d="M593 232V385"/>
-<path class="d" d="M598 380A10 10 0 0 1 608 390"/>
-<rect class="s" x="585" y="405" width="15" height="85"/>
-<path class="d" d="M600 412A12 12 0 0 1 612 424M600 452A12 12 0 0 1 612 464"/>
-<rect class="s" x="512" y="480" width="88" height="10"/>
-<path class="t" d="M555 490V560M592 490V560"/>
-<rect class="el" x="558" y="497" width="32" height="33"/><path class="el" d="M558 497L590 530M590 497L558 530"/>
-<!-- student employment / research librarian office -->
-<path class="t" d="M598 228H704"/>
-<path class="d" d="M600 230A14 14 0 0 1 614 244"/>
-<path class="t" d="M598 283H628M642 283H704M642 283V272"/>
-<path class="d" d="M642 272A12 12 0 0 0 630 284"/>
-<path class="t" d="M648 406H704M648 406V506"/>
-<path class="d" d="M650 412A14 14 0 0 1 664 426"/>
-<path class="t" d="M616 430H648"/>
-<!-- greenaway room + small partitions -->
-<path class="t" d="M648 462H704"/>
-<path class="t" d="M618 491H660M620 491V506M646 491V506M660 482V508"/>
-<path class="t" d="M620 532H662V546M620 532V546"/>
-<path class="i" d="M652 506V540"/>
-<!-- atrium columns -->
-<rect class="s" x="448" y="268" width="7" height="7"/><rect class="s" x="520" y="268" width="7" height="7"/>
-<rect class="s" x="448" y="322" width="7" height="7"/><rect class="s" x="520" y="322" width="7" height="7"/>
-<rect class="s" x="448" y="378" width="7" height="7"/><rect class="s" x="520" y="378" width="7" height="7"/>
-<rect class="s" x="448" y="431" width="7" height="7"/><rect class="s" x="520" y="431" width="7" height="7"/>
-SVG;
-}
-
-function wpfloors_drawing_periodicals() {
-	return <<<'SVG'
-<path class="fp" d="M13 272H115V240H242V102H445V153H816V632H674V801H578V758H380V801H277V632H13Z"/>
-<!-- exterior -->
-<path class="w" d="M42 272H115V240H242V185M242 160V102H300M316 102H445V153H525M545 153H816V632H674V801H578V758H380V801H277V632H13V285"/>
-<path class="d" d="M42 272A20 20 0 0 0 22 252M242 160A20 20 0 0 0 222 180M525 153A18 18 0 0 1 543 135"/>
-<!-- north-west: interlibrary services, stair, small rooms -->
-<rect class="st" x="46" y="280" width="36" height="40"/><path class="st" d="M52 280V320M58 280V320M64 280V320M70 280V320M76 280V320M46 300H82M46 305H82"/>
-<path class="i" d="M13 324H95M115 272H300M118 276V335"/>
-<path class="d" d="M118 335A18 18 0 0 0 100 317"/>
-<path class="t" d="M182 276V335M135 335H225"/>
-<path class="d" d="M228 335A14 14 0 0 1 238 320"/>
-<rect class="st" x="128" y="244" width="40" height="26"/><path class="st" d="M134 244V270M140 244V270M146 244V270M152 244V270M158 244V270M128 270L152 244"/>
-<path class="i" d="M242 185V322"/>
-<path class="i" d="M242 157H300"/>
-<rect class="st" x="264" y="160" width="20" height="24"/><path class="st" d="M268 160V184M272 160V184M276 160V184M280 160V184"/>
-<path class="t" d="M242 186H286M245 198H265M245 221H265M245 244H265M286 205V270M286 205H300"/>
-<!-- restroom, newspapers -->
-<path class="i" d="M319 102V157H365M381 157V102"/>
-<path class="t" d="M319 183H376M319 205H376M319 183V205"/>
-<path class="w" d="M319 270H376"/>
-<path class="i" d="M382 180V272"/>
-<path class="t" d="M369 278V395"/>
-<path class="w" d="M377 276V520"/>
-<path class="i" d="M400 272H460"/>
-<!-- elevator + computer connection -->
-<rect class="el" x="404" y="106" width="33" height="43"/><path class="el" d="M404 106L437 149M437 106L404 149"/>
-<path class="i" d="M441 102V153"/>
-<path class="t" d="M438 157V205L455 225M478 157V225M500 225L520 202V157M466 210V225M490 210V225"/>
-<path class="d" d="M455 225A12 12 0 0 1 466 212M500 225A12 12 0 0 0 489 212M507 230A18 18 0 0 1 520 250"/>
-<!-- stair tower -->
-<rect class="st" x="548" y="160" width="92" height="24"/><path class="st" d="M586 160V184M592 160V184M598 160V184M604 160V184M610 160V184M616 160V184M622 160V184M628 160V184M634 160V184M550 184L566 160"/>
-<path class="t" d="M548 186H640"/>
-<rect class="st" x="668" y="160" width="50" height="22"/><path class="st" d="M674 160V182M680 160V182M686 160V182M692 160V182M698 160V182M704 160V182M710 160V182M664 186V262M669 186V262M669 186H720V214H669"/>
-<rect class="st" x="740" y="160" width="46" height="22"/><path class="st" d="M746 160V182M752 160V182M758 160V182M764 160V182M770 160V182M776 160V182M740 182L746 210L760 230V262M746 182L752 208L767 228V262"/>
-<rect class="s" x="505" y="258" width="311" height="24"/>
-<!-- east side: staff lounge, seminar room, closed storage -->
-<rect class="st" x="535" y="285" width="20" height="20"/><path class="st" d="M540 285V305M545 285V305M550 285V305"/>
-<path class="i" d="M693 282V325M650 323H816M768 282V325"/>
-<rect class="st" x="675" y="295" width="15" height="22"/><path class="st" d="M680 295V317M685 295V317"/>
-<path class="d" d="M618 282A20 20 0 0 1 638 302M655 297A16 16 0 0 1 671 313"/>
-<path class="w" d="M577 305V545"/>
-<path class="t" d="M585 325H602M585 330V460M585 360H612M585 410H612M585 455H612M615 345V375"/>
-<path class="i" d="M615 455V520M630 420H690M690 325V520M640 520H816M636 520V568"/>
-<path class="d" d="M615 400A16 16 0 0 1 631 416M615 520A20 20 0 0 1 595 500"/>
-<!-- south-east: elevator, stairs, restroom -->
-<rect class="el" x="553" y="556" width="24" height="29"/><path class="el" d="M553 556L577 585M577 556L553 585"/>
-<path class="t" d="M515 551H550V590H582"/>
-<path class="d" d="M582 556A20 20 0 0 1 600 574"/>
-<rect class="st" x="525" y="600" width="45" height="25"/><path class="st" d="M531 600V625M537 600V625M543 600V625M549 600V625M555 600V625M561 600V625"/>
-<rect class="st" x="572" y="600" width="32" height="25"/><path class="st" d="M578 600V625M584 600V625M590 600V625M596 600V625"/>
-<rect class="t" x="640" y="605" width="20" height="20"/>
-<path class="i" d="M277 632H315M337 632H465M495 632H540M560 632H674M536 632V652"/>
-<path class="d" d="M315 632A18 18 0 0 1 333 614"/>
-<rect class="s" x="367" y="635" width="16" height="50"/>
-<rect class="st" x="600" y="638" width="52" height="64"/><path class="st" d="M600 646H652M600 654H652M600 662H652M600 670H652M600 678H652M600 686H652M610 638L652 702"/>
-<path class="t" d="M600 704H674M600 716H640V730M618 716V730"/>
-<!-- south rooms -->
-<path class="i" d="M380 707H392M405 707H466M480 707H520M452 707V752M534 680V752M534 682H556M580 700V752"/>
-<path class="d" d="M392 707A13 13 0 0 1 405 694M520 707A14 14 0 0 1 534 693M556 702A16 16 0 0 1 572 718"/>
-<path class="t" d="M552 716H576V740M502 728V745"/>
-<path class="w" d="M380 758H578"/>
-<path class="i" d="M580 750H674"/>
-<path class="d" d="M580 752A20 20 0 0 1 560 732"/>
-<rect class="s" x="419" y="796" width="13" height="13"/><rect class="s" x="453" y="796" width="13" height="13"/><rect class="s" x="487" y="796" width="13" height="13"/><rect class="s" x="522" y="796" width="13" height="13"/>
-<!-- west: reading room, offices, cataloging -->
-<path class="t" d="M13 392H104"/>
-<path class="i" d="M128 392V510M13 450H128"/>
-<path class="d" d="M104 392A16 16 0 0 1 120 408"/>
-<path class="t" d="M73 452V510M13 510H52M88 510H128"/>
-<path class="d" d="M52 510A16 16 0 0 1 68 494M88 510A14 14 0 0 0 76 497"/>
-<path class="i" d="M240 392V510M258 394H377M258 510H377"/>
-<path class="d" d="M242 398A16 16 0 0 1 258 414M242 506A16 16 0 0 0 258 490"/>
-<path class="d" d="M380 518A18 18 0 0 1 398 536"/>
-<rect class="t" x="371" y="533" width="14" height="18"/>
-<path class="i" d="M380 552H408V632"/>
-<path class="t" d="M136 570H230M182 570V632"/>
-<path class="i" d="M124 582V632M242 582V632"/>
-<path class="d" d="M126 572A14 14 0 0 1 140 586M240 572A14 14 0 0 0 226 586"/>
-<!-- current periodicals columns -->
-<rect class="s" x="434" y="327" width="7" height="7"/><rect class="s" x="507" y="327" width="7" height="7"/>
-<rect class="s" x="434" y="384" width="7" height="7"/><rect class="s" x="507" y="384" width="7" height="7"/>
-<rect class="s" x="434" y="438" width="7" height="7"/><rect class="s" x="507" y="438" width="7" height="7"/>
-<rect class="s" x="434" y="493" width="7" height="7"/><rect class="s" x="507" y="493" width="7" height="7"/>
-SVG;
-}
-
-/* The Stacks Level is drawn on two boards. The archives piece is joined to the rest at the
-   "MATCH LINE" by the translate() below. */
-function wpfloors_drawing_stacks() {
-	return <<<'SVG'
-<g transform="translate(160 831)"><path class="fp" d="M295 664H403V622H523V642H590V1095H255V998H295Z"/></g>
-<path class="fp" d="M744 290H951V102H1018V77H1243V640H1332V1492H748V1345H744ZM38 1283H290V1228H744V1345H717V1372H655V1400L687 1440V1453H562V1402H38Z"/>
-<!-- stacks: exterior -->
-<path class="w" d="M744 290H951V102M975 102H1018V77H1243V640H1332V1492H1213M1185 1492H900M872 1492H748V1345M744 1300V290M744 1325V1345"/>
-<path class="d" d="M872 1492A18 18 0 0 1 890 1474M1213 1492A18 18 0 0 0 1195 1474M744 1300A20 20 0 0 1 764 1320"/>
-<!-- quartos / folios / stacks P-Z -->
-<path class="i" d="M1130 196V188H1088V230H1130V222"/>
-<path class="d" d="M1130 196A18 18 0 0 1 1146 210"/>
-<rect class="s" x="1002" y="337" width="14" height="14"/>
-<path class="i" d="M1006 515V525H1119V600M1013 525V582H1119M1119 515H1240"/>
-<rect class="st" x="1055" y="530" width="45" height="48"/><path class="st" d="M1062 530V578M1069 530V578M1076 530V578M1083 530V578M1090 530V578M1035 578L1095 520"/>
-<path class="d" d="M1013 560A18 18 0 0 0 995 578M1013 600A16 16 0 0 1 1029 616"/>
-<path class="t" d="M1013 612V634M1122 612V634"/>
-<path class="w" d="M744 634H853M878 634H1240"/>
-<!-- study rooms, listening and viewing rooms -->
-<path class="i" d="M744 1342H858M920 1342H1012M1060 1342H1155"/>
-<rect class="s" x="888" y="1334" width="10" height="12"/><rect class="s" x="1032" y="1334" width="10" height="12"/><rect class="s" x="1172" y="1334" width="10" height="12"/>
-<path class="d" d="M858 1345A20 20 0 0 1 878 1365M1012 1345A18 18 0 0 1 1030 1363M1155 1345A16 16 0 0 1 1171 1361"/>
-<path class="i" d="M893 1340V1460M967 1342V1460M1037 1340V1460M1112 1342V1460M1180 1340V1460M893 1400H1182M1004 1400V1460M1077 1400V1460M1150 1400V1460"/>
-<path class="i" d="M893 1460H948M1027 1460H1055M1100 1460H1127M1175 1460H1182"/>
-<path class="d" d="M948 1460A18 18 0 0 1 966 1442M1004 1460A20 20 0 0 1 984 1440M1037 1460A16 16 0 0 1 1053 1444M1077 1460A20 20 0 0 1 1057 1440M1112 1460A14 14 0 0 1 1126 1446M1150 1460A22 22 0 0 1 1128 1438"/>
-<!-- music wing -->
-<path class="w" d="M744 1228H290V1283H38V1402H562V1453M562 1345V1370"/>
-<path class="w" d="M717 1345V1372H655V1400L687 1440V1453"/>
-<path class="i" d="M362 1343H400M417 1343H744M622 1343V1402H562"/>
-<path class="i" d="M386 1232V1343M559 1232V1343"/>
-<path class="d" d="M342 1343A18 18 0 0 1 360 1325M400 1343A17 17 0 0 0 417 1326"/>
-<path class="i" d="M290 1286H342V1343"/>
-<rect class="el" x="252" y="1290" width="33" height="46"/><path class="el" d="M252 1290L285 1336M285 1290L252 1336"/>
-<path class="i" d="M245 1342H318M287 1287V1336"/>
-<path class="t" d="M249 1290V1310"/>
-<path class="i" d="M139 1285V1347H215V1310"/>
-<path class="d" d="M215 1290A18 18 0 0 1 230 1308"/>
-<path class="t" d="M139 1347V1352H158M197 1352H216M139 1365V1402M215 1365V1402"/>
-<path class="d" d="M158 1352A16 16 0 0 1 142 1368M197 1352A16 16 0 0 0 213 1368"/>
-<rect class="st" x="580" y="1346" width="38" height="28"/><path class="st" d="M586 1346V1374M592 1346V1374M598 1346V1374M604 1346V1374M610 1346V1374M580 1374L606 1346"/>
-<rect class="st" x="660" y="1346" width="55" height="25"/><path class="st" d="M667 1346V1371M674 1346V1371M681 1346V1371M688 1346V1371M695 1346V1371M702 1346V1371M709 1346V1371"/>
-<!-- archives (drawn on its own board; joined here at the match line) -->
-<g transform="translate(160 831)">
-<path class="w" d="M523 622V642H590V1095H410V1092H255V998H295V664H403V622"/>
-<path class="i" d="M403 645H455V664M403 664H455"/>
-<path class="d" d="M455 645A18 18 0 0 1 473 663"/>
-<path class="i" d="M476 642V735H545M580 735H590"/>
-<rect class="s" x="528" y="645" width="10" height="14"/>
-<path class="d" d="M545 735A18 18 0 0 1 563 717"/>
-<path class="i" d="M435 664V732M436 765V962H582"/>
-<path class="d" d="M437 732A16 16 0 0 1 453 748"/>
-<path class="t" d="M298 692H360M362 670V692M387 670V695M298 780H408M390 730V760M392 742H420"/>
-<path class="d" d="M408 780A18 18 0 0 1 426 798M392 730A14 14 0 0 1 406 744"/>
-<path class="i" d="M370 960H418M372 960V1015M298 1003H370M302 998V1045"/>
-<path class="d" d="M372 1015A18 18 0 0 1 390 1033M302 1045A16 16 0 0 1 318 1061"/>
-<rect class="el" x="264" y="1006" width="33" height="34"/><path class="el" d="M264 1006L297 1040M297 1006L264 1040"/>
-<path class="t" d="M373 1035V1088M305 1065V1090"/>
-<rect class="st" x="315" y="1065" width="40" height="24"/><path class="st" d="M335 1065V1089M340 1065V1089M345 1065V1089M350 1065V1089M310 1092L335 1065"/>
-</g>
-SVG;
-}
-
-function wpfloors_drawing_first_mezzanine() {
-	return <<<'SVG'
-<path class="fp" d="M50 42H145V76H243V168H328V350H416V430H318V563H18V432H92V76H50Z"/>
-<!-- exterior -->
-<path class="w" d="M92 70H50V42H145V76H243V168H328V350H416V430H318V563H240M220 563H95M55 563H18V432H92V76"/>
-<path class="d" d="M95 563A20 20 0 0 0 75 543M220 563A20 20 0 0 1 240 543"/>
-<!-- restroom, elevator, stair tower -->
-<path class="i" d="M50 70H80M92 42V58"/>
-<path class="d" d="M80 70A12 12 0 0 1 92 58"/>
-<rect class="el" x="114" y="46" width="26" height="28"/><path class="el" d="M114 46L140 74M140 46L114 74"/>
-<path class="i" d="M110 42V56M110 82V90H143V160"/>
-<rect class="st" x="99" y="95" width="13" height="52"/><path class="st" d="M99 103H112M99 111H112M99 119H112M99 127H112M99 135H112M99 143H112"/>
-<rect class="st" x="148" y="78" width="16" height="20"/><path class="st" d="M152 78V98M156 78V98M160 78V98"/>
-<rect class="st" x="170" y="78" width="26" height="20"/><path class="st" d="M175 78V98M180 78V98M185 78V98M190 78V98"/>
-<path class="t" d="M146 92H215V150M220 100V150"/>
-<path class="st" d="M220 80H240M220 86H240M220 92H240"/>
-<rect class="s" x="88" y="150" width="12" height="16"/><rect class="s" x="133" y="150" width="12" height="16"/><rect class="s" x="185" y="150" width="58" height="16"/>
-<!-- fine arts hall -->
-<path class="i" d="M243 168V340"/>
-<rect class="s" x="134" y="202" width="7" height="7"/><rect class="s" x="189" y="202" width="7" height="7"/>
-<rect class="s" x="134" y="243" width="7" height="7"/><rect class="s" x="189" y="243" width="7" height="7"/>
-<rect class="s" x="134" y="287" width="7" height="7"/><rect class="s" x="189" y="287" width="7" height="7"/>
-<rect class="s" x="134" y="331" width="7" height="7"/><rect class="s" x="189" y="331" width="7" height="7"/>
-<!-- east offices -->
-<rect class="st" x="243" y="175" width="16" height="20"/><path class="st" d="M247 175V195M251 175V195M255 175V195"/>
-<path class="t" d="M281 172V192M283 205H325M281 200V214M283 243H325M281 238V250M283 275H325M281 268V282M283 305H325M281 300V312"/>
-<rect class="s" x="264" y="207" width="5" height="5"/><rect class="s" x="264" y="243" width="5" height="5"/><rect class="s" x="264" y="273" width="5" height="5"/><rect class="s" x="264" y="303" width="5" height="5"/>
-<!-- band of rooms under the hall -->
-<path class="w" d="M92 374H150V432"/>
-<path class="i" d="M150 374H243V340"/>
-<rect class="st" x="243" y="340" width="14" height="30"/><path class="st" d="M243 346H257M243 352H257M243 358H257M243 364H257"/>
-<path class="t" d="M165 374V398H185M120 402V432"/>
-<path class="d" d="M120 402A16 16 0 0 1 136 418"/>
-<rect class="st" x="186" y="376" width="24" height="22"/><path class="st" d="M186 382H210M186 388H210M186 394H210"/>
-<rect class="el" x="215" y="378" width="23" height="20"/><path class="el" d="M215 378L238 398M238 378L215 398"/>
-<path class="i" d="M213 400V432M243 374V400"/>
-<path class="i" d="M283 340V430"/>
-<path class="d" d="M286 392A16 16 0 0 1 302 408"/>
-<rect class="t" x="265" y="400" width="15" height="11"/>
-<!-- clark room -->
-<path class="i" d="M18 432H45M57 432H122M135 432H197M210 432H220"/>
-<path class="t" d="M55 522H195M57 522V563M92 522V563"/>
-<rect class="st" x="60" y="530" width="20" height="28"/><path class="st" d="M60 536H80M60 542H80M60 548H80M60 554H80"/>
-<!-- stairs and college learning center -->
-<path class="i" d="M220 432H275M222 435V492M318 432V500"/>
-<path class="t" d="M222 445H240V470H222"/>
-<rect class="st" x="265" y="445" width="30" height="30"/>
-<rect class="st" x="295" y="448" width="18" height="26"/><path class="st" d="M295 454H313M295 460H313M295 466H313"/>
-<path class="i" d="M220 497H318M222 497V563"/>
-<path class="d" d="M242 497A16 16 0 0 0 226 513"/>
-<circle class="s" cx="98" cy="568" r="5"/><circle class="s" cx="124" cy="568" r="5"/><circle class="s" cx="149" cy="568" r="5"/><circle class="s" cx="174" cy="568" r="5"/><circle class="s" cx="200" cy="568" r="5"/>
-SVG;
-}
-
-function wpfloors_drawing_second_mezzanine() {
-	return <<<'SVG'
-<path class="fp" d="M532 42H628V78H729V432H802V562H504V432H582V78H532Z"/>
-<!-- exterior -->
-<path class="w" d="M582 72H532V42H628V78H729V432H802V562H504V432H582V72"/>
-<!-- restroom, elevator, stair, upper room -->
-<path class="i" d="M532 70H565M578 42V58"/>
-<path class="d" d="M565 70A13 13 0 0 1 578 57"/>
-<rect class="el" x="598" y="46" width="26" height="28"/><path class="el" d="M598 46L624 74M624 46L598 74"/>
-<path class="i" d="M594 42V56M594 82V90H624"/>
-<rect class="st" x="598" y="97" width="13" height="46"/><path class="st" d="M598 105H611M598 113H611M598 121H611M598 129H611M598 137H611"/>
-<path class="i" d="M622 92V165M582 152H620"/>
-<rect class="s" x="618" y="155" width="16" height="15"/><rect class="s" x="670" y="155" width="59" height="15"/>
-<!-- offices and fine arts stacks -->
-<path class="t" d="M584 202H610V174M697 174V202H727"/>
-<path class="d" d="M610 186A12 12 0 0 1 598 174M697 186A12 12 0 0 0 709 174"/>
-<rect class="s" x="621" y="205" width="7" height="7"/><rect class="s" x="677" y="205" width="7" height="7"/>
-<rect class="s" x="621" y="247" width="7" height="7"/><rect class="s" x="677" y="247" width="7" height="7"/>
-<rect class="s" x="621" y="290" width="7" height="7"/><rect class="s" x="677" y="290" width="7" height="7"/>
-<rect class="s" x="621" y="330" width="7" height="7"/><rect class="s" x="677" y="330" width="7" height="7"/>
-<path class="i" d="M582 374H612M630 374H650M660 374H675M700 374H729"/>
-<path class="i" d="M604 374V432M640 374V432M668 374V432"/>
-<path class="t" d="M640 397H668"/>
-<rect class="st" x="683" y="377" width="16" height="25"/><path class="st" d="M683 383H699M683 389H699M683 395H699"/>
-<rect class="el" x="703" y="380" width="22" height="22"/><path class="el" d="M703 380L725 402M725 380L703 402"/>
-<path class="i" d="M700 405H729"/>
-<!-- south wing -->
-<path class="i" d="M712 432V526M504 525H712"/>
-<path class="t" d="M720 437H796V497H720"/>
-<path class="i" d="M722 500V562"/>
-<path class="i" d="M564 525V562"/>
-<rect class="st" x="566" y="538" width="12" height="22"/><path class="st" d="M566 544H578M566 550H578M566 556H578"/>
-SVG;
 }

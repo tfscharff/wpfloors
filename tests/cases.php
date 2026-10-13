@@ -10,7 +10,7 @@ function lbl( $over = array() ) {
 	return array_merge( array( 'id' => 'a1', 'name' => 'Room', 'type' => 'room', 'note' => '', 'x' => 10, 'y' => 20 ), $over );
 }
 function fl( $over = array() ) {
-	return array_merge( array( 'slug' => 'main', 'name' => 'Main Level', 'map' => 'main', 'image' => 0 ), $over );
+	return array_merge( array( 'slug' => 'main', 'name' => 'Main Level', 'image' => 7 ), $over );
 }
 /** Sanitize labels on one built-in floor; return that floor's clean labels. */
 function labs( $rows ) {
@@ -25,18 +25,16 @@ ok( array() === $s['floors'] && array() === $s['labels'], 'new site: no floors' 
 $GLOBALS['wpf_options'] = array();
 ok( array() === wpfloors_get()['floors'], 'missing option reads as no floors' );
 
-$s = wpfloors_sanitize( array( 'main' => array( lbl() ), 'stacks' => array(), 'periodicals' => 'junk' ) );
-ok( array( 'main', 'periodicals', 'stacks', 'first-mezzanine', 'second-mezzanine' ) === array_column( $s['floors'], 'slug' ), '1.0 data upgrades to the five built-in floors, in order' );
-ok( 'Main Level' === $s['floors'][0]['name'] && 'main' === $s['floors'][0]['map'], 'upgraded floor uses its built-in drawing' );
-ok( 1 === count( $s['labels']['main'] ) && array() === $s['labels']['periodicals'], '1.0 labels kept on their floors' );
-ok( 5 === count( wpfloors_sanitize( array() )['floors'] ), 'an empty 1.0 option still upgrades' );
-ok( wpfloors_sanitize( 'junk' ) === wpfloors_sanitize( array() ), 'junk input treated like an empty old option' );
+ok( array() === wpfloors_sanitize( array( 'main' => array( lbl() ), 'stacks' => array() ) )['floors'], 'old 1.0 data (labels only) gives no floors' );
+ok( array() === wpfloors_sanitize( 'junk' )['floors'] && array() === wpfloors_sanitize( null )['floors'], 'junk input gives no floors' );
+$s = wpfloors_sanitize( array( 'floors' => array( array( 'slug' => 'main', 'name' => 'Main Level', 'map' => 'main', 'image' => 0 ) ), 'labels' => array() ) );
+ok( array( array( 'slug' => 'main', 'name' => 'Main Level', 'image' => 0 ) ) === $s['floors'], '1.1 built-in floors keep their name but have no map' );
 
 $s = wpfloors_sanitize( array( 'floors' => array(
-	fl( array( 'slug' => '', 'name' => '<b>Third</b> Floor!', 'map' => 'image', 'image' => '7' ) ),
-	fl( array( 'slug' => 'third-floor', 'name' => 'Another', 'map' => 'image', 'image' => 7 ) ),
-	fl( array( 'slug' => 'Main', 'name' => 'Main', 'map' => 'main', 'image' => 7 ) ),
-	fl( array( 'slug' => '', 'name' => '!!!', 'map' => 'bogus', 'image' => -3 ) ),
+	fl( array( 'slug' => '', 'name' => '<b>Third</b> Floor!', 'image' => '7' ) ),
+	fl( array( 'slug' => 'third-floor', 'name' => 'Another', 'image' => 7 ) ),
+	fl( array( 'slug' => 'Main', 'name' => 'Main', 'image' => 'x' ) ),
+	fl( array( 'slug' => '', 'name' => '!!!', 'image' => -3 ) ),
 	fl( array( 'name' => '' ) ),
 	fl( array( 'name' => array( 'x' ) ) ),
 	'not a floor',
@@ -45,9 +43,10 @@ $f = $s['floors'];
 ok( 4 === count( $f ), 'floors without a name dropped' );
 ok( 'third-floor' === $f[0]['slug'] && 'Third Floor!' === $f[0]['name'], 'slug made from the name; tags stripped from the name' );
 ok( 'third-floor-2' === $f[1]['slug'], 'duplicate slugs made unique' );
-ok( 'main' === $f[2]['slug'] && 0 === $f[2]['image'], 'built-in floors carry no image' );
-ok( 7 === $f[0]['image'] && 'image' === $f[0]['map'], 'image floor keeps its attachment ID' );
-ok( 'floor' === $f[3]['slug'] && 'image' === $f[3]['map'] && 0 === $f[3]['image'], 'unknown map becomes an image floor with no image' );
+ok( 'main' === $f[2]['slug'] && 0 === $f[2]['image'], 'slug cleaned; non-numeric image becomes none' );
+ok( 7 === $f[0]['image'], 'floor keeps its SVG attachment ID' );
+ok( 'floor' === $f[3]['slug'] && 0 === $f[3]['image'], 'unsluggable name gets "floor"; negative image becomes none' );
+ok( array( 'slug', 'name', 'image' ) === array_keys( $f[0] ), 'a floor stores only slug, name and image' );
 ok( array_keys( $s['labels'] ) === array_column( $f, 'slug' ), 'a label list for every floor' );
 
 $many = array();
@@ -89,8 +88,54 @@ ok( WPFLOORS_MAX_LABELS === count( labs( $many ) ), 'label count capped per floo
 foreach ( array_keys( wpfloors_types() ) as $t ) {
 	ok( 1 === count( labs( array( lbl( array( 'type' => $t ) ) ) ) ), "type $t accepted" );
 }
-$clean = wpfloors_sanitize( array( 'floors' => array( fl(), fl( array( 'slug' => '', 'name' => 'Third', 'map' => 'image', 'image' => 7 ) ) ), 'labels' => array( 'main' => array( lbl(), lbl( array( 'id' => 'q2', 'name' => 'a < b' ) ) ) ) ) );
+$clean = wpfloors_sanitize( array( 'floors' => array( fl(), fl( array( 'slug' => '', 'name' => 'Third', 'image' => 7 ) ) ), 'labels' => array( 'main' => array( lbl(), lbl( array( 'id' => 'q2', 'name' => 'a < b' ) ) ) ) ) );
 ok( wpfloors_sanitize( $clean ) === $clean, 'sanitize is idempotent' );
+
+/* ---------------- SVG maps ---------------- */
+
+ok( array( 1200.0, 800.0 ) === wpfloors_svg_size( '<svg viewBox="0 0 1200 800">' ), 'size from viewBox' );
+ok( array( 50.5, 20.0 ) === wpfloors_svg_size( "<svg\n  viewBox='10,10, 50.5,20' width=\"9\" height=\"9\">" ), 'viewBox wins over width/height; commas allowed' );
+ok( array( 300.0, 150.0 ) === wpfloors_svg_size( '<svg width="300px" height="150">' ), 'size from width and height' );
+ok( null === wpfloors_svg_size( '<svg width="100%" height="100%">' ) && null === wpfloors_svg_size( '<svg viewBox="0 0 0 10">' ) && null === wpfloors_svg_size( 'nope' ), 'no usable size gives null' );
+
+$good = '<?xml version="1.0" encoding="UTF-8"?><!-- Generator: Adobe Illustrator --><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 50"><defs><style>.a{fill:#333}</style><linearGradient id="g"/></defs><rect class="a" fill="url(#g)" width="10" height="10"/><use xlink:href="#g"/><image href="data:image/png;base64,AAAA" width="1" height="1"/></svg>';
+ok( '' === wpfloors_svg_problem( $good ), 'a normal drawing export passes (doctype, style, internal links, embedded PNG)' );
+$bad = array(
+	'empty'           => '',
+	'not svg'         => '<html><body>hi</body></html>',
+	'no size'         => '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0"/></svg>',
+	'script'          => '<svg viewBox="0 0 1 1"><script>alert(1)</script></svg>',
+	'script spaced'   => '<svg viewBox="0 0 1 1">< SCRIPT >alert(1)</script></svg>',
+	'onload'          => '<svg viewBox="0 0 1 1" onload="alert(1)"></svg>',
+	'onclick upper'   => '<svg viewBox="0 0 1 1"><rect ONCLICK="x()"/></svg>',
+	'foreignObject'   => '<svg viewBox="0 0 1 1"><foreignObject><iframe src="x"/></foreignObject></svg>',
+	'js href'         => '<svg viewBox="0 0 1 1"><a href="javascript:alert(1)"><rect/></a></svg>',
+	'encoded js href' => '<svg viewBox="0 0 1 1"><a xlink:href="&#106;avascript:alert(1)"><rect/></a></svg>',
+	'external href'   => '<svg viewBox="0 0 1 1"><image href="https://evil.test/x.png"/></svg>',
+	'html data href'  => '<svg viewBox="0 0 1 1"><a href="data:text/html,<script>alert(1)</script>"><rect/></a></svg>',
+	'svg data image'  => '<svg viewBox="0 0 1 1"><image href="data:image/svg+xml;base64,AAAA"/></svg>',
+	'entity'          => '<!DOCTYPE svg [<!ENTITY x SYSTEM "file:///etc/passwd">]><svg viewBox="0 0 1 1">&x;</svg>',
+	'css import'      => '<svg viewBox="0 0 1 1"><style>@import "https://evil.test/a.css";</style></svg>',
+	'css url'         => '<svg viewBox="0 0 1 1"><style>.a{background:url(https://evil.test/t.gif)}</style></svg>',
+	'embed'           => '<svg viewBox="0 0 1 1"><embed src="x.swf"/></svg>',
+	'too big'         => '<svg viewBox="0 0 1 1">' . str_repeat( ' ', WPFLOORS_MAX_SVG_BYTES ) . '</svg>',
+);
+foreach ( $bad as $what => $xml ) {
+	ok( '' !== wpfloors_svg_problem( $xml ), "unsafe or unusable SVG refused: $what" );
+}
+
+$up = function ( $name, $content ) {
+	$tmp = $GLOBALS['wpf_dir'] . '/upload.tmp';
+	file_put_contents( $tmp, $content );
+	return wpfloors_check_upload( array( 'name' => $name, 'tmp_name' => $tmp, 'error' => 0 ) );
+};
+ok( 0 === $up( 'map.svg', $good )['error'], 'good SVG upload goes through untouched' );
+ok( is_string( $up( 'Map.SVG', $bad['onload'] )['error'] ), 'bad SVG upload refused with a message' );
+ok( is_string( $up( 'map.svgz', $good )['error'] ), '.svgz refused' );
+ok( 0 === $up( 'photo.jpg', 'whatever' )['error'], 'other uploads are not this plugin\'s business' );
+ok( array( 'url' => 'https://example.test/up/third.svg', 'w' => 1200.0, 'h' => 800.0 ) === wpfloors_image( 7 ), 'SVG attachment gives URL and size' );
+ok( 300.0 === wpfloors_image( 8 )['w'], 'SVG sized by width and height works too' );
+ok( null === wpfloors_image( 9 ) && null === wpfloors_image( 10 ) && null === wpfloors_image( 99 ) && null === wpfloors_image( 0 ), 'no map from an unsized SVG, a PNG, a missing file or nothing' );
 
 /* ---------------- REST ---------------- */
 
@@ -107,7 +152,7 @@ foreach ( array( null, 'x', array(), array( 'floors' => 'x', 'labels' => array()
 }
 $GLOBALS['wpf_options'] = array();
 $r = wpfloors_rest_save( new WP_REST_Request( array(
-	'floors' => array( fl(), fl( array( 'slug' => 'third', 'name' => 'Third Floor', 'map' => 'image', 'image' => 7 ) ), fl( array( 'slug' => 'fourth', 'name' => 'Fourth', 'map' => 'image', 'image' => 99 ) ) ),
+	'floors' => array( fl( array( 'image' => 0 ) ), fl( array( 'slug' => 'third', 'name' => 'Third Floor', 'image' => 7 ) ), fl( array( 'slug' => 'fourth', 'name' => 'Fourth', 'image' => 10 ) ) ),
 	'labels' => array(
 		'main'  => array( lbl( array( 'name' => '<i>Info</i> Desk' ) ), lbl( array( 'id' => 'x2', 'type' => 'nope' ) ) ),
 		'third' => array( lbl( array( 'id' => 'e1', 'name' => 'North exit', 'type' => 'exit', 'note' => 'Push bar', 'x' => 50, 'y' => 5 ) ) ),
@@ -115,8 +160,8 @@ $r = wpfloors_rest_save( new WP_REST_Request( array(
 ) ) );
 ok( is_array( $r ) && true === $r['ok'], 'save ok' );
 ok( 'Info Desk' === $r['labels']->main[0]['name'] && 1 === count( $r['labels']->main ), 'save returns sanitized labels' );
-ok( 3 === count( $r['floors'] ) && isset( $r['images']->{7} ) && ! isset( $r['images']->{99} ), 'save returns floors and only the images that exist' );
-ok( 1200 === $r['images']->{7}['w'], 'image size returned for the editor' );
+ok( 3 === count( $r['floors'] ) && isset( $r['images']->{7} ) && ! isset( $r['images']->{10} ), 'save returns floors and only usable SVG maps' );
+ok( 1200.0 === $r['images']->{7}['w'], 'map size returned for the editor' );
 update_option( WPFLOORS_OPTION, array( 'floors' => array( fl() ), 'labels' => array( 'main' => array( lbl( array( 'name' => '<b>x</b>' ) ) ) ) ) );
 ok( 'x' === $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['main'][0]['name'], 'any update_option goes through sanitize' );
 
@@ -126,27 +171,28 @@ $GLOBALS['wpf_options'] = array();
 ok( '<p>No floor maps yet.</p>' === wpfloors_shortcode(), 'a new site says there are no floor maps yet' );
 
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ] = array( 'main' => array(), 'stacks' => array() ); // 1.0 data, as on the live site
+ok( '<p>No floor maps yet.</p>' === wpfloors_shortcode(), 'old 1.0 data shows no floors' );
+
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ] = array( 'floors' => array( fl(), fl( array( 'slug' => 'b', 'name' => 'Basement', 'image' => 8 ) ), fl( array( 'slug' => 'c', 'name' => 'Attic' ) ) ), 'labels' => array() );
 $html = wpfloors_shortcode();
-ok( 5 === substr_count( $html, 'Nothing listed on this floor yet.' ), 'upgraded site: all five floors, empty' );
-ok( 5 === substr_count( $html, '<h2 ' ) && 5 === substr_count( $html, 'role="img"' ) && 5 === substr_count( $html, 'Everything shown is listed below.' ), 'an H2 and a role=img map per floor' );
-ok( 5 === substr_count( $html, 'Open full-size map' ), 'full-size link per floor' );
-ok( false === strpos( $html, '<script' ) && false === strpos( $html, '<!--' ), 'no JavaScript, no source comments' );
+ok( 3 === substr_count( $html, 'Nothing listed on this floor yet.' ), 'empty floors say nothing listed' );
+ok( 3 === substr_count( $html, '<h2 ' ) && 3 === substr_count( $html, 'role="img"' ) && 3 === substr_count( $html, 'Everything shown is listed below.' ), 'an H2 and a role=img map per floor' );
+ok( 3 === substr_count( $html, 'Open full-size map' ), 'full-size link per floor' );
+ok( false === strpos( $html, '<script' ) && false === strpos( $html, '<!--' ), 'no JavaScript, no comments' );
 ok( false === stripos( $html, 'tabindex' ) && false === strpos( $html, '<button' ) && false === strpos( $html, '<input' ), 'nothing interactive on the map' );
 ok( false === strpos( $html, '<text' ) && false === strpos( $html, 'class="wpfloors-key"' ), 'no text and no key without labels' );
 preg_match_all( '/\sid="([^"]+)"/', $html, $m );
 ok( count( $m[1] ) === count( array_unique( $m[1] ) ), 'no duplicate ids' );
-$order = array();
-foreach ( array( 'Main Level', 'Periodicals Level', 'Stacks Level', 'First Mezzanine', 'Second Mezzanine' ) as $n ) { $order[] = strpos( $html, '>' . $n . '</h2>' ); }
-$sorted = $order; sort( $sorted );
-ok( $order === $sorted && ! in_array( false, $order, true ), 'floors in the agreed order' );
+ok( strpos( $html, '>Main Level</h2>' ) < strpos( $html, '>Basement</h2>' ) && strpos( $html, '>Basement</h2>' ) < strpos( $html, '>Attic</h2>' ), 'floors in their saved order' );
+ok( false !== strpos( $html, 'viewBox="0 0 300 150"' ) && false !== strpos( $html, '<image href="https://example.test/up/sized.svg" x="0" y="0" width="300" height="150"/>' ), 'SVG drawn with <image> at its own size' );
 
 $evil = '"><script>alert(1)</script>';
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ] = array(
 	'floors' => array(
 		fl(),
-		fl( array( 'slug' => 'third', 'name' => 'Third "Floor" & Co', 'map' => 'image', 'image' => 7 ) ),
-		fl( array( 'slug' => 'gone', 'name' => 'Annex', 'map' => 'image', 'image' => 99 ) ),
-		fl( array( 'slug' => 'main-h', 'name' => 'Main H', 'map' => 'stacks' ) ),
+		fl( array( 'slug' => 'third', 'name' => 'Third "Floor" & Co', 'image' => 7 ) ),
+		fl( array( 'slug' => 'gone', 'name' => 'Annex', 'image' => 99 ) ),
+		fl( array( 'slug' => 'main-h', 'name' => 'Main H', 'image' => 8 ) ),
 	),
 	'labels' => array(
 		'main'  => array(
@@ -170,8 +216,8 @@ ok( strpos( $html, '<strong>a &lt; b' ) < strpos( $html, '<strong>Archives' ), '
 ok( false !== strpos( $html, "Wait here for help if you can&#039;t use the stairs." ), 'note in the list' );
 ok( false !== strpos( $html, 'Stairs: <strong>East stairs</strong>' ) && false !== strpos( $html, '<strong>Reference Desk</strong>. Ask here' ), 'type said only in mixed groups' );
 ok( 3 === substr_count( $html, 'class="nm end"' ), 'names near the right edge are anchored at the end' );
-ok( false !== strpos( $html, '<image href="https://example.test/up/third-floor.png" x="0" y="0" width="1200" height="800"/>' ) && false !== strpos( $html, 'viewBox="0 0 1200 800"' ), 'image floor draws its image at its own size' );
-ok( false !== strpos( $html, 'translate(600 400) scale(19.2)' ), 'markers placed by percent on image floors' );
+ok( false !== strpos( $html, '<image href="https://example.test/up/third.svg" x="0" y="0" width="1200" height="800"/>' ), 'each floor draws its own SVG' );
+ok( false !== strpos( $html, 'translate(600 400) scale(19.2)' ) && false !== strpos( $html, 'translate(480 240) scale(19.2)' ), 'markers placed by percent of the map' );
 ok( 1 === substr_count( $html, 'The map for this floor isn&#8217;t available yet.' ) && false !== strpos( $html, '<strong>Annex desk</strong>' ), 'floor with a missing image still lists its labels' );
 ok( 3 === substr_count( $html, 'Open full-size map' ), 'no full-size link without a map' );
 preg_match_all( '/\sid="([^"]+)"/', $html, $m );
@@ -185,7 +231,7 @@ ok( 0 === strpos( $full, '<!doctype html><html lang="en-US">' ), 'full page is a
 ok( false !== strpos( $full, '<title>Main Level floor map | Wallace Library</title>' ), 'full page title' );
 ok( 1 === substr_count( $full, '<h1>Main Level</h1>' ) && 4 === substr_count( $full, '<h2>' ), 'full page H1, groups as H2' );
 ok( false !== strpos( $full, 'Back to all floor maps' ) && false === strpos( $full, 'Open full-size map' ) && false === strpos( $full, '<script' ), 'back link, no self link, no JS' );
-ok( false !== strpos( wpfloors_full_page( 'third', '' ), '<h1>Third &quot;Floor&quot; &amp; Co</h1>' ), 'full page for an image floor' );
+ok( false !== strpos( wpfloors_full_page( 'third', '' ), '<h1>Third &quot;Floor&quot; &amp; Co</h1>' ), 'full page for another floor' );
 ok( '' === wpfloors_full_page( 'nope', '' ), 'unknown floor gives nothing' );
 
 /* ---------------- admin ---------------- */
@@ -193,7 +239,7 @@ ok( '' === wpfloors_full_page( 'nope', '' ), 'unknown floor gives nothing' );
 ob_start(); wpfloors_admin_page(); $admin = ob_get_clean();
 ok( false !== strpos( $admin, 'window.WPFLOORS_ADMIN=' ), 'admin config inline' );
 ok( false === strpos( substr( $admin, strpos( $admin, 'WPFLOORS_ADMIN=' ), 6000 ), '<script>alert' ), 'config JSON cannot close the script tag' );
-ok( 5 === substr_count( $admin, 'class="wpfloors-tpl"' ), 'admin has every built-in drawing as a template' );
+ok( false === strpos( $admin, 'wpfloors-tpl' ) && false !== strpos( $admin, 'Map (SVG)' ), 'admin has no built-in drawings' );
 $GLOBALS['wpf_can'] = false;
 ob_start(); wpfloors_admin_page(); ok( '' === ob_get_clean(), 'admin page empty without edit_pages' );
 $GLOBALS['wpf_can'] = true;

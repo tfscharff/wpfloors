@@ -1,12 +1,11 @@
 # Floor Maps
 
-A WordPress plugin that shows accessible floor maps of a library or any building. Staff set up the
-floors and add every label (rooms, services, collections, restrooms, elevators, stairs, exits,
-emergency rescue areas and kits) in wp-admin, without touching code. Built for the Wallace Library
-site, but any site can use its own maps.
+A WordPress plugin that shows accessible floor maps of a library or any building. Staff upload an
+SVG map for each floor and add every label (rooms, services, collections, restrooms, elevators,
+stairs, exits, emergency rescue areas and kits) in wp-admin, without touching code.
 
-- **wp-admin → Floor Maps → Floors**: add, rename, reorder and delete floors. Each floor uses a
-  built-in drawing (the five Wallace Library floors) or an image from the Media Library.
+- **wp-admin → Floor Maps → Floors**: add, rename, reorder and delete floors, and choose each
+  floor's SVG map from the Media Library.
 - **wp-admin → Floor Maps → Labels**: choose a floor, then click the map to add a label. Edit, move
   or delete labels from the table under the map.
 - **`[floor_maps]`**: put this shortcode on a page to show every floor. Each floor shows the map
@@ -17,23 +16,29 @@ also appears in the text list.
 
 ## Status
 
-1.1.0 is the current release. A new site starts with no floors. A site upgrading from 1.0 keeps
-the five built-in Wallace Library floors and their labels.
+2.0.0 is the current release. A fresh install has no floors and no maps.
+
+## Your SVG maps
+
+- **SVG only.** Upload a `.svg` file for each floor. The plugin doesn't take other formats and
+  doesn't convert anything. It lets editors upload SVGs, which WordPress normally blocks.
+- **No words on the map.** Add every name as a label instead, so it appears in the text list that
+  screen reader users rely on.
+- **Dark walls on a light background,** at least 3:1 contrast.
+- The SVG needs a `viewBox` (or a width and height), which normal exports from Illustrator,
+  Inkscape or CAD tools include.
+- For security, uploads are refused if the SVG contains scripts, event handlers, entity
+  declarations, links to other files or pages, or CSS that loads other files. If an upload is
+  refused, export the drawing again as a plain SVG.
 
 ## Notes for staff
 
-- **Using your own map image:** upload a clean drawing of the floor with no words on it, with dark
-  walls on a light background. Put every room name on the map as a label instead, so it also
-  appears in the text list that screen reader users rely on. PNG, JPG or GIF works. WordPress
-  blocks SVG uploads by default.
-- Deleting a floor deletes its labels when you click Save. Reload the page before saving to undo.
-
 - Nothing changes on the website until you click **Save**.
+- Deleting a floor deletes its labels when you click Save. Reload the page before saving to undo.
 - To place a label without a mouse, use **Add a label** (or **Edit**) and type the position in
   **Across** and **Down** (percent of the map from the left and from the top).
-- After saving, purge the WP Engine cache ("Purge Cache" in the admin bar) if the public page
-  doesn't show your change yet.
-- **Open full-size map** shows one floor on its own page (`/?wpfloors_map=main`, and so on).
+- After saving, purge your site's page cache if the public page doesn't show your change yet.
+- **Open full-size map** shows one floor on its own page (`/?wpfloors_map=<floor>`).
 
 ## Development
 
@@ -50,6 +55,14 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.0.0 (2026-10-13)
+
+- The plugin no longer ships any maps. A fresh install has no floors; each floor's map is an SVG
+  you upload. The built-in Wallace Library drawings are gone.
+- SVG only: editors can upload `.svg` files, and unsafe SVGs are refused at upload.
+- Floors from 1.1.0 keep their names and labels but need an SVG map. Data from 1.0.0 isn't carried
+  over.
 
 ### 1.1.0 (2026-10-13)
 

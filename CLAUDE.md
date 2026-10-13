@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-**Floor Maps**: a single-file WordPress plugin (`wpfloors.php`) for the Wallace Library site
-(library.wheatoncollege.edu, WP Engine). It shows clean, label-free drawings of the library's five
-floors, and staff add every label themselves in wp-admin. It is the fourth in-house plugin, after
+**Floor Maps**: a single-file WordPress plugin (`wpfloors.php`), built for the Wallace Library site
+(library.wheatoncollege.edu, WP Engine) but usable by any site. Staff add floors, upload an SVG map
+for each one, and add every label themselves in wp-admin. It is the fourth in-house plugin, after
 `wphours` (Library Hours), `wprooms` (Reserve a Room) and the librarians plugin. Copy their
 conventions, especially `Documents\wphours\CLAUDE.md`.
 
@@ -17,52 +17,36 @@ Call them **floor maps**, never "floor plans": in code, UI text, docs and commit
 
 ## Status
 
-1.1.0 (2026-10-13): floors are data, not code. The option is `{floors: [{slug, name, map, image}], labels: {slug: [...]}}`. `map` is a built-in drawing key or `image` (a Media Library attachment ID), and 1.0's labels-only option upgrades to the five built-ins in `wpfloors_sanitize()`. A floor's slug never changes after its first save, because labels, anchors and full-size URLs depend on it. The user asked for this on 2026-10-13, so the brief below now describes the built-in floors: "five floor maps" and "staff never edit the drawings" apply only to those.
+2.0.0 (2026-10-13). The plugin ships **no maps**: a fresh install has no floors, and each floor's map
+is an SVG the site uploads. The user asked to remove the built-in Wallace drawings, and that's in
+git history if ever needed (1.0.0 to 1.1.0, traced from photos that were in `source/`). Standalone
+SVG exports of those five drawings were handed to the user in `Downloads\wallace-floor-maps\`.
 
-1.0.0 built 2026-10-13. The drawings were traced in photo pixel coordinates, so each floor's
-`viewBox` is a crop of its photo. The Stacks archives board sits in a `translate(160 831)` group
-that joins it at the match line. Tests: `php tests/run.php [preview-dir]`. The stubs are in `run.php` and the cases in `tests/cases.php`. It stubs WordPress, and
-with a folder it writes preview pages you can screenshot with headless Chrome. Headless Chrome won't
-go below about 500px wide, so check 320px inside a 320px iframe.
-
-## Source drawings
-
-`source/` holds the four images from the library's PowerPoint deck *Wallace Library Floor Plan
-(August 2022)*. Each is a photo of an old architect's presentation board.
-
-| File | Floor(s) |
-|---|---|
-| `main-level.png` | Main Level |
-| `periodicals-level.png` | Periodicals Level |
-| `stacks-level.png` | Stacks Level. Drawn in two pieces joined at a "MATCH LINE" |
-| `fine-arts-mezzanines.png` | First Mezzanine (left) and Second Mezzanine (right) |
-
-The printed room names in the photos are out of date. **Do not trace them, and do not add any
-labels.** The user wants every floor to launch with no labels, so they can test adding and editing
-labels as a regular staff editor. That includes the emergency details from the deck: exits, rescue
-areas and kits.
+- The option is `{floors: [{slug, name, image}], labels: {slug: [...]}}`, where `image` is the
+  attachment ID of the floor's SVG. Data without a `floors` key (1.0) reads as no floors.
+- A floor's slug never changes after its first save, because labels, anchors and full-size URLs
+  depend on it.
+- SVG only: no other formats, and no conversions. The plugin lets `edit_pages` users upload `.svg`.
+  `wpfloors_svg_problem()` refuses an upload, without changing it, if it contains scripts, event
+  handlers, entities, external links or CSS that loads files, or has no viewBox or size.
+- Maps are drawn with SVG `<image>`, which never runs scripts, and the markers go on top.
+- Tests: `php tests/run.php [preview-dir]`. The stubs are in `run.php` and the cases in
+  `tests/cases.php`. With a folder, it writes preview pages you can screenshot with headless Chrome.
+  Headless Chrome won't go below about 500px wide, so check 320px inside a 320px iframe.
 
 ## Agreed design
 
-### Drawings
-- There are **five floor maps**: Main Level, Periodicals Level, Stacks Level, First Mezzanine and
-  Second Mezzanine. The default page order is the one in that list.
-- Hand-trace walls, doors, stairs and elevator shafts from the photos into inline SVG, built into
-  the plugin. The drawings have **no text**. They need to be accurate enough to find your way, not
-  to scale.
-- Correct the photos' perspective and skew by eye. Join the two Stacks pieces at the match line into
-  one continuous drawing.
-- Walls must have at least 3:1 contrast against the drawing background.
-- Staff never edit the drawings. If Facilities later provides CAD files, they could replace the
-  drawings without changing the data model.
-- Check every drawing against its photo, side by side, for missing walls, doors or stairs. Show the
-  user the comparison.
+### Maps
+- Staff add, rename, reorder and delete floors, and choose one SVG map per floor from the Media
+  Library. The page order is the order in the Floors table.
+- A map should have **no text** (every name is a label) and walls at least 3:1 against the
+  background. The admin screen says so, but the plugin can't check it.
 
 ### Data
 - Store everything in one option. Follow the `wphours` pattern: one option, and every write goes
   through a single sanitize function.
-- The stored data is keyed by floor. Each label is
-  `{id, name, type, note, x, y}`, with `x` and `y` as percentages of the drawing.
+- Labels are keyed by floor slug. Each label is
+  `{id, name, type, note, x, y}`, with `x` and `y` as percentages of the map.
 - `type` is exactly one of:
   - room or service
   - collection
@@ -77,7 +61,7 @@ areas and kits.
 ### Admin: wp-admin → Floor Maps
 - The capability is `edit_pages`, the same as the sister plugins. A regular editor must be able to
   do everything.
-- Choose a floor to see its drawing. **Click a spot to add a label.** A small form asks for name,
+- Floors section: name, SVG map, Move up/down, Delete. Then choose a floor to see its map. **Click a spot to add a label.** A small form asks for name,
   type and note.
 - A table under the drawing lists that floor's labels, with Edit, Delete and Move. Move means click
   "Move", then click a new spot.
@@ -99,8 +83,9 @@ areas and kits.
     - **Restrooms, elevators and stairs**
     - **Emergency: exits, rescue areas and kits**
 - Each list item includes its note.
-- A floor with no labels shows its drawing and "Nothing listed on this floor yet." All five floors
-  launch like this.
+- A floor with no labels shows its map and "Nothing listed on this floor yet." A floor whose SVG is
+  missing shows "The map for this floor isn't available yet." and its list. With no floors, the
+  shortcode says "No floor maps yet." 
 - Under each drawing, an "Open full-size map" link opens that floor's drawing on its own.
 - Printing puts each floor on its own page, with its list.
 
@@ -124,6 +109,7 @@ Don't add any of these unless the user asks:
 - routes between rooms;
 - a "confirmed" step for emergency rows;
 - importing the deck's labels;
+- accepting image formats other than SVG, or converting files;
 - an A–Z index;
 - a separate emergency page.
 
@@ -159,7 +145,7 @@ Every code change ships as a versioned release, not just a commit:
 3. Commit and push to `main` on `github.com/tfscharff/wpfloors`. Commit and push after every change.
 4. Create the release with `gh release create vX.Y.Z`, attaching a zip whose top-level folder is
    `wpfloors/`. That folder contains `wpfloors.php`, `README.md` and `LICENSE`. Leave
-   `source/` out of the zip. Copy the zip to `C:\Users\thoma\Downloads`. `.gitignore` already
+   `tests/` out of the zip. Copy the zip to `C:\Users\thoma\Downloads`. `.gitignore` already
    ignores `build/` and `*.zip`, so stage the build there (PowerShell 7):
    ```powershell
    Remove-Item -Recurse -Force build -ErrorAction SilentlyContinue
