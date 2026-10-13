@@ -230,6 +230,10 @@ ok( false !== strpos( $html, '<h3>Rooms and services</h3>' ) && false !== strpos
 ok( strpos( $html, '<strong>a &lt; b' ) < strpos( $html, '<strong>Archives' ), 'groups sorted by name' );
 ok( false !== strpos( $html, "Wait here for help if you can&#039;t use the stairs." ), 'note in the list' );
 ok( false !== strpos( $html, 'Stairs: <strong>East stairs</strong>' ) && false !== strpos( $html, '<strong>Reference Desk</strong>. Ask here' ), 'type said only in mixed groups' );
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't2', 'name' => 'Help Desk', 'type' => 'service', 'note' => '', 'x' => 20, 'y' => 20 );
+$h2 = wpfloors_shortcode();
+ok( false !== strpos( $h2, 'Room: <strong>Study room</strong>' ) && false !== strpos( $h2, 'Service: <strong>Help Desk</strong>' ), 'rooms and services share a group and say which is which' );
+ok( false !== strpos( $h2, '>Help Desk</text>' ) && false !== strpos( $h2, 'M-1-1H1V.45L0 1.15L-1 .45Z' ), 'a service shows its name and its own badge shape' );
 ok( 1 === substr_count( $html, 'class="nm end"' ), 'names near the right edge are anchored at the end' );
 ok( false === strpos( $html, '>East stairs</text>' ) && false === strpos( $html, '>Elevator</text>' ) && false !== strpos( $html, '>Reference Desk</text>' ), 'stairs and elevator show only their symbol by default; rooms show their name' );
 ok( false !== strpos( $html, 'Stairs: <strong>East stairs</strong>' ) && false !== strpos( $html, 'Elevator: <strong>Elevator</strong>' ), 'hidden names still appear in the list' );

@@ -16,7 +16,7 @@ also appears in the text list.
 
 ## Status
 
-2.2.0 is the current release. A fresh install has no floors and no maps.
+2.4.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -65,9 +65,16 @@ Plugin, choose the zip, then choose **Replace current** if it's already installe
 
 ## Changelog
 
+### 2.4.0 (2026-10-13)
+
+- "Room or service" is now two types: **Room** (door icon, circle) and **Service** (service-desk
+  bell icon, badge shape). Both are listed under "Rooms and services". Labels saved before 2.4.0
+  become Rooms; edit any that are services and change their type.
+- (2.3.0 was released and withdrawn the same day, so it's skipped.)
+
 ### 2.2.0 (2026-10-13)
 
-- Markers show a Font Awesome icon in place of a letter: door (room or service), book
+- Markers show a Font Awesome icon in place of a letter: door (room), book
   (collection), restroom, elevator, stairs, person walking to an arrow (exit), wheelchair
   (emergency rescue area) and first-aid kit (emergency kit). Each type keeps its own shape.
 - Markers are a little larger so the icons stay legible; names stay the same size.

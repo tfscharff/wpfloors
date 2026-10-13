@@ -50,7 +50,8 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   "Show name on the map" (2.1.0). It defaults by type: on for rooms, services and collections,
   off for the rest. The list always shows every name.
 - `type` is exactly one of:
-  - room or service
+  - room
+  - service (added in 2.4.0, when "room or service" was split in two)
   - collection
   - restroom
   - elevator
