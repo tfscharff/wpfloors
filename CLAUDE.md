@@ -77,7 +77,8 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
 - The shortcode goes on a new normal page, **About → Locations and places → Floor Maps** (`/about/places/floor-maps/`, page ID 2203), which the
   user or Claude creates.
 - **Render on the server.** The public page needs no JavaScript.
-- Links to each floor at the top. Then, for each floor:
+- No links to each floor at the top (removed in 2.5.0 at the user's request; don't add them
+  back). For each floor:
   - an H2 with the floor's name;
   - the drawing, with each label shown as a marker and its name;
   - the same labels as a list, grouped under these headings:

@@ -16,7 +16,7 @@ also appears in the text list.
 
 ## Status
 
-2.4.0 is the current release. A fresh install has no floors and no maps.
+2.5.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -64,6 +64,11 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.5.0 (2026-10-13)
+
+- The shortcode no longer adds links to each floor above the maps. The page starts with the first
+  floor's heading.
 
 ### 2.4.0 (2026-10-13)
 

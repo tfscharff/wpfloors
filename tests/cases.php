@@ -194,6 +194,7 @@ ok( 3 === substr_count( $html, 'Nothing listed on this floor yet.' ), 'empty flo
 ok( 3 === substr_count( $html, '<h2 ' ) && 3 === substr_count( $html, 'role="img"' ) && 3 === substr_count( $html, 'Everything shown is listed below.' ), 'an H2 and a role=img map per floor' );
 ok( 3 === substr_count( $html, 'Open full-size map' ), 'full-size link per floor' );
 ok( false === strpos( $html, '<script' ) && false === strpos( $html, '<!--' ), 'no JavaScript, no comments' );
+ok( false === strpos( $html, '<nav' ) && false === strpos( $html, 'href="#wpfloors-' ), 'no floor links at the top' );
 ok( false === stripos( $html, 'tabindex' ) && false === strpos( $html, '<button' ) && false === strpos( $html, '<input' ), 'nothing interactive on the map' );
 ok( false === strpos( $html, '<text' ) && false === strpos( $html, 'class="wpfloors-key"' ), 'no text and no key without labels' );
 preg_match_all( '/\sid="([^"]+)"/', $html, $m );

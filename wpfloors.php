@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Floor Maps
  * Description:       Accessible floor maps for a library or any building. Staff upload an SVG map for each floor and add every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
- * Version:           2.4.0
+ * Version:           2.5.0
  * Author:            Madeleine Clark Wallace Library
  * License:           GPL-2.0+
  * Requires at least: 5.6
@@ -366,11 +366,6 @@ function wpfloors_shortcode() {
 	}
 	$from = function_exists( 'get_the_ID' ) ? (int) get_the_ID() : 0;
 	$out  = '<style>' . wpfloors_svg_css() . wpfloors_page_css() . '</style><div class="wpfloors">';
-	$out .= '<nav class="wpfloors-nav" aria-label="Floors"><ul>';
-	foreach ( $data['floors'] as $f ) {
-		$out .= '<li><a href="#wpfloors-' . esc_attr( $f['slug'] ) . '">' . esc_html( $f['name'] ) . '</a></li>';
-	}
-	$out .= '</ul></nav>';
 	foreach ( $data['floors'] as $f ) {
 		$full = add_query_arg( array( 'wpfloors_map' => $f['slug'], 'wpfloors_from' => $from ), home_url( '/' ) );
 		$out .= '<section class="wpfloors-floor" id="wpfloors-' . esc_attr( $f['slug'] ) . '" aria-labelledby="wpfloors-h-' . esc_attr( $f['slug'] ) . '">';
@@ -436,7 +431,6 @@ function wpfloors_floor_body( $floor, $labels, $h, $full_url ) {
 function wpfloors_page_css() {
 	return <<<'CSS'
 .wpfloors{overflow-wrap:anywhere}
-.wpfloors-nav ul{display:flex;flex-wrap:wrap;gap:.4em 1.4em;list-style:none;margin:0 0 1em;padding:0}
 .wpfloors-floor{margin:0 0 2.5em}
 .wpfloors-map{border:1px solid #767676;background:#fff;padding:4px}
 .wpfloors-key{margin:.6em 0}
@@ -447,7 +441,7 @@ function wpfloors_page_css() {
 .wpfloors-group li .wpfloors-icon{margin-top:-.15em}
 .wpfloors-sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media print{
-  .wpfloors-nav,.wpfloors-full-link{display:none}
+  .wpfloors-full-link{display:none}
   .wpfloors-floor{break-before:page;page-break-before:always;margin:0}
   .wpfloors-floor:first-of-type{break-before:auto;page-break-before:auto}
   .wpfloors-svg{max-height:5.5in}
