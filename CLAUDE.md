@@ -17,9 +17,11 @@ Call them **floor maps**, never "floor plans": in code, UI text, docs and commit
 
 ## Status
 
+1.1.0 (2026-10-13): floors are data, not code. The option is `{floors: [{slug, name, map, image}], labels: {slug: [...]}}`. `map` is a built-in drawing key or `image` (a Media Library attachment ID), and 1.0's labels-only option upgrades to the five built-ins in `wpfloors_sanitize()`. A floor's slug never changes after its first save, because labels, anchors and full-size URLs depend on it. The user asked for this on 2026-10-13, so the brief below now describes the built-in floors: "five floor maps" and "staff never edit the drawings" apply only to those.
+
 1.0.0 built 2026-10-13. The drawings were traced in photo pixel coordinates, so each floor's
 `viewBox` is a crop of its photo. The Stacks archives board sits in a `translate(160 831)` group
-that joins it at the match line. Tests: `php tests/run.php [preview-dir]`. It stubs WordPress, and
+that joins it at the match line. Tests: `php tests/run.php [preview-dir]`. The stubs are in `run.php` and the cases in `tests/cases.php`. It stubs WordPress, and
 with a folder it writes preview pages you can screenshot with headless Chrome. Headless Chrome won't
 go below about 500px wide, so check 320px inside a 320px iframe.
 
