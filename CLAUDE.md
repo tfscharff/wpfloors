@@ -46,7 +46,9 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
 - Store everything in one option. Follow the `wphours` pattern: one option, and every write goes
   through a single sanitize function.
 - Labels are keyed by floor slug. Each label is
-  `{id, name, type, note, x, y}`, with `x` and `y` as percentages of the map.
+  `{id, name, type, note, show, x, y}`, with `x` and `y` as percentages of the map. `show` is
+  "Show name on the map" (2.1.0). It defaults by type: on for rooms, services and collections,
+  off for the rest. The list always shows every name.
 - `type` is exactly one of:
   - room or service
   - collection

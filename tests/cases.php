@@ -57,7 +57,22 @@ ok( ! isset( $s['labels']['gone'] ), 'labels for a deleted floor dropped' );
 
 /* ---------------- labels ---------------- */
 
-ok( labs( array( lbl() ) ) === array( array( 'id' => 'a1', 'name' => 'Room', 'type' => 'room', 'note' => '', 'x' => 10.0, 'y' => 20.0 ) ), 'clean label kept as is' );
+ok( labs( array( lbl() ) ) === array( array( 'id' => 'a1', 'name' => 'Room', 'type' => 'room', 'note' => '', 'show' => true, 'x' => 10.0, 'y' => 20.0 ) ), 'clean label kept as is' );
+
+/* "Show name on the map": a yes/no value, or the type's default when missing or unclear. */
+$l = labs( array(
+	lbl( array( 'id' => 's1', 'type' => 'room' ) ),
+	lbl( array( 'id' => 's2', 'type' => 'collection' ) ),
+	lbl( array( 'id' => 's3', 'type' => 'restroom' ) ),
+	lbl( array( 'id' => 's4', 'type' => 'exit' ) ),
+	lbl( array( 'id' => 's5', 'type' => 'room', 'show' => false ) ),
+	lbl( array( 'id' => 's6', 'type' => 'kit', 'show' => true ) ),
+	lbl( array( 'id' => 's7', 'type' => 'room', 'show' => '0' ) ),
+	lbl( array( 'id' => 's8', 'type' => 'stairs', 'show' => 1 ) ),
+	lbl( array( 'id' => 's9', 'type' => 'room', 'show' => 'banana' ) ),
+	lbl( array( 'id' => 's10', 'type' => 'elevator', 'show' => array( true ) ) ),
+) );
+ok( array( true, true, false, false, false, true, false, true, true, false ) === array_column( $l, 'show' ), 'show defaults by type (rooms and collections yes, the rest no) and accepts yes/no values' );
 $l = labs( array(
 	lbl( array( 'name' => '<script>alert(1)</script>Reading <b>Room</b>' ) ),
 	lbl( array( 'id' => 'a2', 'name' => "  Two\nlines\t here " ) ),
@@ -215,7 +230,9 @@ ok( false !== strpos( $html, '<h3>Rooms and services</h3>' ) && false !== strpos
 ok( strpos( $html, '<strong>a &lt; b' ) < strpos( $html, '<strong>Archives' ), 'groups sorted by name' );
 ok( false !== strpos( $html, "Wait here for help if you can&#039;t use the stairs." ), 'note in the list' );
 ok( false !== strpos( $html, 'Stairs: <strong>East stairs</strong>' ) && false !== strpos( $html, '<strong>Reference Desk</strong>. Ask here' ), 'type said only in mixed groups' );
-ok( 3 === substr_count( $html, 'class="nm end"' ), 'names near the right edge are anchored at the end' );
+ok( 1 === substr_count( $html, 'class="nm end"' ), 'names near the right edge are anchored at the end' );
+ok( false === strpos( $html, '>East stairs</text>' ) && false === strpos( $html, '>Elevator</text>' ) && false !== strpos( $html, '>Reference Desk</text>' ), 'stairs and elevator show only their symbol by default; rooms show their name' );
+ok( false !== strpos( $html, 'Stairs: <strong>East stairs</strong>' ) && false !== strpos( $html, 'Elevator: <strong>Elevator</strong>' ), 'hidden names still appear in the list' );
 ok( false !== strpos( $html, '<image href="https://example.test/up/third.svg" x="0" y="0" width="1200" height="800"/>' ), 'each floor draws its own SVG' );
 ok( false !== strpos( $html, 'translate(600 400) scale(19.2)' ) && false !== strpos( $html, 'translate(480 240) scale(19.2)' ), 'markers placed by percent of the map' );
 ok( 1 === substr_count( $html, 'The map for this floor isn&#8217;t available yet.' ) && false !== strpos( $html, '<strong>Annex desk</strong>' ), 'floor with a missing image still lists its labels' );
