@@ -85,7 +85,7 @@ areas and kits.
   to place a label without a mouse, for example x/y fields in the form.
 
 ### Public page: `[floor_maps]` shortcode
-- The shortcode goes on a new normal page, **About → Floor Maps** (`/about/floor-maps/`), which the
+- The shortcode goes on a new normal page, **About → Locations and places → Floor Maps** (`/about/places/floor-maps/`, page ID 2203), which the
   user or Claude creates.
 - **Render on the server.** The public page needs no JavaScript.
 - Links to each floor at the top. Then, for each floor:
@@ -139,7 +139,7 @@ Don't add any of these unless the user asks:
   `C:\Users\thoma\bin\php\php.exe -l wpfloors.php`
 - Test sanitize, the REST handlers and the shortcode output against a stub harness that mocks the
   WordPress functions. Include junk input and stray HTML in names and notes.
-- After the user installs it, check the live `/about/floor-maps/`:
+- After the user installs it, check the live `/about/places/floor-maps/`:
   - run a wpa11y rescan and axe, with no labels and with a few test labels;
   - check it at 320px and at 400% zoom;
   - check print preview.
