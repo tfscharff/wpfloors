@@ -127,7 +127,11 @@ Don't add any of these unless the user asks:
   - nowdoc (`<<<'HTML'`) for markup and JS with no PHP variables;
   - config passed to inline scripts via `wp_json_encode()`;
   - ES5-style JS.
-- A portable PHP CLI is at `C:\Users\thoma\bin\php\php.exe`. Run `php -l` on every change.
+
+  Pick heredoc or nowdoc on purpose. A heredoc (`<<<HTML`) around JS makes PHP try to interpolate
+  every `$` in the script.
+- A portable PHP CLI is at `C:\Users\thoma\bin\php\php.exe`. Run `php -l` on every change:
+  `C:\Users\thoma\bin\php\php.exe -l mcw-floor-maps.php`
 - Test sanitize, the REST handlers and the shortcode output against a stub harness that mocks the
   WordPress functions. Include junk input and stray HTML in names and notes.
 - After the user installs it, check the live `/about/floor-maps/`:
@@ -148,7 +152,16 @@ Every code change ships as a versioned release, not just a commit:
 3. Commit and push to `main` on `github.com/tfscharff/wpfloors`. Commit and push after every change.
 4. Create the release with `gh release create vX.Y.Z`, attaching a zip whose top-level folder is
    `mcw-floor-maps/`. That folder contains `mcw-floor-maps.php`, `README.md` and `LICENSE`. Leave
-   `source/` out of the zip. Copy the zip to `C:\Users\thoma\Downloads`.
+   `source/` out of the zip. Copy the zip to `C:\Users\thoma\Downloads`. `.gitignore` already
+   ignores `build/` and `*.zip`, so stage the build there (PowerShell 7):
+   ```powershell
+   Remove-Item -Recurse -Force build -ErrorAction SilentlyContinue
+   New-Item -ItemType Directory -Force build\mcw-floor-maps | Out-Null
+   Copy-Item mcw-floor-maps.php, README.md, LICENSE build\mcw-floor-maps\
+   Compress-Archive -Path build\mcw-floor-maps -DestinationPath build\mcw-floor-maps.zip -Force
+   gh release create vX.Y.Z build\mcw-floor-maps.zip --title vX.Y.Z --notes "..."
+   Copy-Item build\mcw-floor-maps.zip $HOME\Downloads\
+   ```
 5. The user installs it at Plugins → Add New → Upload Plugin → Replace current.
 
 ## Site rules that apply here
