@@ -52,6 +52,7 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
 - `type` is exactly one of:
   - room
   - service (added in 2.4.0, when "room or service" was split in two)
+  - printer (added in 2.6.0; listed under "Rooms and services")
   - collection
   - restroom
   - elevator

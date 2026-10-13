@@ -235,6 +235,10 @@ $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' =>
 $h2 = wpfloors_shortcode();
 ok( false !== strpos( $h2, 'Room: <strong>Study room</strong>' ) && false !== strpos( $h2, 'Service: <strong>Help Desk</strong>' ), 'rooms and services share a group and say which is which' );
 ok( false !== strpos( $h2, '>Help Desk</text>' ) && false !== strpos( $h2, 'M-1-1H1V.45L0 1.15L-1 .45Z' ), 'a service shows its name and its own badge shape' );
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't3', 'name' => 'Color printer', 'type' => 'printer', 'note' => 'Pay at the desk', 'x' => 30, 'y' => 70 );
+$h3 = wpfloors_shortcode();
+ok( false !== strpos( $h3, 'Printer: <strong>Color printer</strong>. Pay at the desk' ) && false === strpos( $h3, '>Color printer</text>' ), 'a printer is listed under rooms and services, symbol only on the map by default' );
+ok( false !== strpos( $h3, 'M-.72-.95H.72L1.18 .95H-1.18Z' ) && false !== strpos( $h3, '<span>Printer</span>' ), 'printer has its own shape and is in the key' );
 ok( 1 === substr_count( $html, 'class="nm end"' ), 'names near the right edge are anchored at the end' );
 ok( false === strpos( $html, '>East stairs</text>' ) && false === strpos( $html, '>Elevator</text>' ) && false !== strpos( $html, '>Reference Desk</text>' ), 'stairs and elevator show only their symbol by default; rooms show their name' );
 ok( false !== strpos( $html, 'Stairs: <strong>East stairs</strong>' ) && false !== strpos( $html, 'Elevator: <strong>Elevator</strong>' ), 'hidden names still appear in the list' );
