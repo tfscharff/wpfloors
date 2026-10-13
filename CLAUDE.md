@@ -97,7 +97,9 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   from screen readers so nothing is read twice. Add a code comment explaining why, so nobody "fixes"
   it later.
 - **Color never carries meaning.** That is a firm rule from the user. Each type gets its own marker
-  shape with a letter in it, in black on white. A short legend in text sits under each drawing.
+  shape with an icon in it, in black on white. A short legend in text sits under each drawing. The
+  icons are Font Awesome Free 6.7.2 solid (CC BY 4.0), embedded as path data in `wpfloors_types()`.
+  Never load Font Awesome's CSS or JS, and keep the credit in README.
 - Labels are real SVG text, not images of text. They need at least 4.5:1 contrast, with a white
   outline so they stay readable over walls.
 - Phones: the drawing scales to the page width and can be pinch-zoomed. The page must never scroll

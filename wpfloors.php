@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Floor Maps
  * Description:       Accessible floor maps for a library or any building. Staff upload an SVG map for each floor and add every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
- * Version:           2.1.1
+ * Version:           2.2.0
  * Author:            Madeleine Clark Wallace Library
  * License:           GPL-2.0+
  * Requires at least: 5.6
@@ -21,20 +21,22 @@ define( 'WPFLOORS_MAX_SVG_BYTES', 5 * 1024 * 1024 );
  * ------------------------------------------------------------------ */
 
 /**
- * Label types. Color never carries meaning: each type has its own marker shape and letter,
- * drawn black on white. name_on_map is the default for a label's "Show name on the map"
- * checkbox: the symbol alone says what a restroom or an exit is, but not which room is which. Shapes are SVG paths around (0,0) at radius ~1; tx/ty/fs place the letter.
+ * Label types. Color never carries meaning: each type has its own marker shape and icon,
+ * drawn black on white. Icons are Font Awesome Free 6.7.2 solid (https://fontawesome.com,
+ * icons licensed CC BY 4.0, Copyright 2024 Fonticons, Inc.): [width, height, path]. is is the icon's
+ * height in marker units, and ix/iy move its center to sit inside the shape. name_on_map is the default for a label's "Show name on the map"
+ * checkbox: the symbol alone says what a restroom or an exit is, but not which room is which. Shapes are SVG paths around (0,0) at radius ~1.
  */
 function wpfloors_types() {
 	return array(
-		'room'       => array( 'label' => 'Room or service',       'group' => 'rooms', 'name_on_map' => true,        'letter' => 'R',  'tx' => 0,     'ty' => 0.34, 'fs' => 0.95, 'shape' => 'M1 0A1 1 0 1 1-1 0A1 1 0 1 1 1 0Z' ),
-		'collection' => array( 'label' => 'Collection',            'group' => 'collections', 'name_on_map' => true,  'letter' => 'C',  'tx' => 0,     'ty' => 0.34, 'fs' => 0.95, 'shape' => 'M-.9-.9H.9V.9H-.9Z' ),
-		'restroom'   => array( 'label' => 'Restroom',              'group' => 'facilities', 'name_on_map' => false,  'letter' => 'WC', 'tx' => 0,     'ty' => 0.28, 'fs' => 0.78, 'shape' => 'M-.55-.85H.55A.85 .85 0 0 1 .55 .85H-.55A.85 .85 0 0 1-.55-.85Z' ),
-		'elevator'   => array( 'label' => 'Elevator',              'group' => 'facilities', 'name_on_map' => false,  'letter' => 'EL', 'tx' => 0,     'ty' => 0.28, 'fs' => 0.78, 'shape' => 'M1.1 0L.55 .95H-.55L-1.1 0L-.55-.95H.55Z' ),
-		'stairs'     => array( 'label' => 'Stairs',                'group' => 'facilities', 'name_on_map' => false,  'letter' => 'ST', 'tx' => 0,     'ty' => 0.4,  'fs' => 0.7,  'shape' => 'M0-1.25L1.35 .85H-1.35Z' ),
-		'exit'       => array( 'label' => 'Exit',                  'group' => 'emergency', 'name_on_map' => false,   'letter' => 'EX', 'tx' => -0.12, 'ty' => 0.28, 'fs' => 0.78, 'shape' => 'M-1.05-.85H.5L1.2 0L.5 .85H-1.05Z' ),
-		'rescue'     => array( 'label' => 'Emergency rescue area', 'group' => 'emergency', 'name_on_map' => false,   'letter' => 'RA', 'tx' => 0,     'ty' => 0.28, 'fs' => 0.78, 'shape' => 'M-.45-1.05H.45L1.05-.45V.45L.45 1.05H-.45L-1.05 .45V-.45Z' ),
-		'kit'        => array( 'label' => 'Emergency kit',         'group' => 'emergency', 'name_on_map' => false,   'letter' => 'K',  'tx' => 0,     'ty' => 0.34, 'fs' => 0.95, 'shape' => 'M0-1.2L1.2 0L0 1.2L-1.2 0Z' ),
+		'room'       => array( 'label' => 'Room or service',       'group' => 'rooms', 'name_on_map' => true,        'icon' => array( 576, 512, 'M320 32c0-9.9-4.5-19.2-12.3-25.2S289.8-1.4 280.2 1l-179.9 45C79 51.3 64 70.5 64 92.5L64 448l-32 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 192 0 32 0 0-32 0-448zM256 256c0 17.7-10.7 32-24 32s-24-14.3-24-32s10.7-32 24-32s24 14.3 24 32zm96-128l96 0 0 352c0 17.7 14.3 32 32 32l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-32 0 0-320c0-35.3-28.7-64-64-64l-96 0 0 64z' ), 'is' => 1.05, 'ix' => 0, 'iy' => 0, 'shape' => 'M1 0A1 1 0 1 1-1 0A1 1 0 1 1 1 0Z' ),
+		'collection' => array( 'label' => 'Collection',            'group' => 'collections', 'name_on_map' => true,  'icon' => array( 448, 512, 'M96 0C43 0 0 43 0 96L0 416c0 53 43 96 96 96l288 0 32 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l0-64c17.7 0 32-14.3 32-32l0-320c0-17.7-14.3-32-32-32L384 0 96 0zm0 384l256 0 0 64L96 448c-17.7 0-32-14.3-32-32s14.3-32 32-32zm32-240c0-8.8 7.2-16 16-16l192 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-192 0c-8.8 0-16-7.2-16-16zm16 48l192 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-192 0c-8.8 0-16-7.2-16-16s7.2-16 16-16z' ), 'is' => 1.05, 'ix' => 0, 'iy' => 0, 'shape' => 'M-.9-.9H.9V.9H-.9Z' ),
+		'restroom'   => array( 'label' => 'Restroom',              'group' => 'facilities', 'name_on_map' => false,  'icon' => array( 640, 512, 'M80 48a48 48 0 1 1 96 0A48 48 0 1 1 80 48zm40 304l0 128c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-154.8c-8.1 9.2-21.1 13.2-33.5 9.4c-16.9-5.3-26.3-23.2-21-40.1l30.9-99.1C44.9 155.3 82 128 124 128l8 0c42 0 79.1 27.3 91.6 67.4l30.9 99.1c5.3 16.9-4.1 34.8-21 40.1c-12.4 3.9-25.4-.2-33.5-9.4L200 480c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-128-16 0zM320 0c13.3 0 24 10.7 24 24l0 464c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-464c0-13.3 10.7-24 24-24zM464 48a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zM440 480l0-96-17.8 0c-10.9 0-18.6-10.7-15.2-21.1l9-26.9c-3.2 0-6.4-.5-9.5-1.5c-16.9-5.3-26.3-23.2-21-40.1l29.7-95.2C428.4 156.9 467.6 128 512 128s83.6 28.9 96.8 71.2l29.7 95.2c5.3 16.9-4.1 34.8-21 40.1c-3.2 1-6.4 1.5-9.5 1.5l9 26.9c3.5 10.4-4.3 21.1-15.2 21.1L584 384l0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-96-16 0 0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32z' ), 'is' => 1.0, 'ix' => 0, 'iy' => 0, 'shape' => 'M-.55-.85H.55A.85 .85 0 0 1 .55 .85H-.55A.85 .85 0 0 1-.55-.85Z' ),
+		'elevator'   => array( 'label' => 'Elevator',              'group' => 'facilities', 'name_on_map' => false,  'icon' => array( 512, 512, 'M132.7 4.7l-64 64c-4.6 4.6-5.9 11.5-3.5 17.4s8.3 9.9 14.8 9.9l128 0c6.5 0 12.3-3.9 14.8-9.9s1.1-12.9-3.5-17.4l-64-64c-6.2-6.2-16.4-6.2-22.6 0zM64 128c-35.3 0-64 28.7-64 64L0 448c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64L64 128zm96 96a48 48 0 1 1 0 96 48 48 0 1 1 0-96zM80 400c0-26.5 21.5-48 48-48l64 0c26.5 0 48 21.5 48 48l0 16c0 17.7-14.3 32-32 32l-96 0c-17.7 0-32-14.3-32-32l0-16zm192 0c0-26.5 21.5-48 48-48l64 0c26.5 0 48 21.5 48 48l0 16c0 17.7-14.3 32-32 32l-96 0c-17.7 0-32-14.3-32-32l0-16zm32-128a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zM356.7 91.3c6.2 6.2 16.4 6.2 22.6 0l64-64c4.6-4.6 5.9-11.5 3.5-17.4S438.5 0 432 0L304 0c-6.5 0-12.3 3.9-14.8 9.9s-1.1 12.9 3.5 17.4l64 64z' ), 'is' => 1.05, 'ix' => 0, 'iy' => 0, 'shape' => 'M1.1 0L.55 .95H-.55L-1.1 0L-.55-.95H.55Z' ),
+		'stairs'     => array( 'label' => 'Stairs',                'group' => 'facilities', 'name_on_map' => false,  'icon' => array( 576, 512, 'M384 64c0-17.7 14.3-32 32-32l128 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-96 0 0 96c0 17.7-14.3 32-32 32l-96 0 0 96c0 17.7-14.3 32-32 32l-96 0 0 96c0 17.7-14.3 32-32 32L32 480c-17.7 0-32-14.3-32-32s14.3-32 32-32l96 0 0-96c0-17.7 14.3-32 32-32l96 0 0-96c0-17.7 14.3-32 32-32l96 0 0-96z' ), 'is' => 0.75, 'ix' => 0, 'iy' => 0.22, 'shape' => 'M0-1.25L1.35 .85H-1.35Z' ),
+		'exit'       => array( 'label' => 'Exit',                  'group' => 'emergency', 'name_on_map' => false,   'icon' => array( 640, 512, 'M208 96a48 48 0 1 0 0-96 48 48 0 1 0 0 96zM123.7 200.5c1-.4 1.9-.8 2.9-1.2l-16.9 63.5c-5.6 21.1-.1 43.6 14.7 59.7l70.7 77.1 22 88.1c4.3 17.1 21.7 27.6 38.8 23.3s27.6-21.7 23.3-38.8l-23-92.1c-1.9-7.8-5.8-14.9-11.2-20.8l-49.5-54 19.3-65.5 9.6 23c4.4 10.6 12.5 19.3 22.8 24.5l26.7 13.3c15.8 7.9 35 1.5 42.9-14.3s1.5-35-14.3-42.9L281 232.7l-15.3-36.8C248.5 154.8 208.3 128 163.7 128c-22.8 0-45.3 4.8-66.1 14l-8 3.5c-32.9 14.6-58.1 42.4-69.4 76.5l-2.6 7.8c-5.6 16.8 3.5 34.9 20.2 40.5s34.9-3.5 40.5-20.2l2.6-7.8c5.7-17.1 18.3-30.9 34.7-38.2l8-3.5zm-30 135.1L68.7 398 9.4 457.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L116.3 441c4.6-4.6 8.2-10.1 10.6-16.1l14.5-36.2-40.7-44.4c-2.5-2.7-4.8-5.6-7-8.6zM550.6 153.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L530.7 224 384 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l146.7 0-25.4 25.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l80-80c12.5-12.5 12.5-32.8 0-45.3l-80-80z' ), 'is' => 1.0, 'ix' => -0.1, 'iy' => 0, 'shape' => 'M-1.05-.85H.5L1.2 0L.5 .85H-1.05Z' ),
+		'rescue'     => array( 'label' => 'Emergency rescue area', 'group' => 'emergency', 'name_on_map' => false,   'icon' => array( 512, 512, 'M192 96a48 48 0 1 0 0-96 48 48 0 1 0 0 96zM120.5 247.2c12.4-4.7 18.7-18.5 14-30.9s-18.5-18.7-30.9-14C43.1 225.1 0 283.5 0 352c0 88.4 71.6 160 160 160c61.2 0 114.3-34.3 141.2-84.7c6.2-11.7 1.8-26.2-9.9-32.5s-26.2-1.8-32.5 9.9C240 440 202.8 464 160 464C98.1 464 48 413.9 48 352c0-47.9 30.1-88.8 72.5-104.8zM259.8 176l-1.9-9.7c-4.5-22.3-24-38.3-46.8-38.3c-30.1 0-52.7 27.5-46.8 57l23.1 115.5c6 29.9 32.2 51.4 62.8 51.4l5.1 0c.4 0 .8 0 1.3 0l94.1 0c6.7 0 12.6 4.1 15 10.4L402 459.2c6 16.1 23.8 24.6 40.1 19.1l48-16c16.8-5.6 25.8-23.7 20.2-40.5s-23.7-25.8-40.5-20.2l-18.7 6.2-25.5-68c-11.7-31.2-41.6-51.9-74.9-51.9l-68.5 0-9.6-48 63.4 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-76.2 0z' ), 'is' => 1.1, 'ix' => 0, 'iy' => 0, 'shape' => 'M-.45-1.05H.45L1.05-.45V.45L.45 1.05H-.45L-1.05 .45V-.45Z' ),
+		'kit'        => array( 'label' => 'Emergency kit',         'group' => 'emergency', 'name_on_map' => false,   'icon' => array( 576, 512, 'M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l32 0L96 32 64 32zm64 0l0 448 320 0 0-448L128 32zM512 480c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64l-32 0 0 448 32 0zM256 176c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16l0 48 48 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-48 0 0 48c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-48-48 0c-8.8 0-16-7.2-16-16l0-32c0-8.8 7.2-16 16-16l48 0 0-48z' ), 'is' => 0.95, 'ix' => 0, 'iy' => 0, 'shape' => 'M0-1.2L1.2 0L0 1.2L-1.2 0Z' ),
 	);
 }
 
@@ -294,19 +296,26 @@ function wpfloors_map( $floor ) {
 	);
 }
 
-/** One label on the map: its marker shape, letter and name, in marker units (radius 1). */
+/** A type's icon, centered inside its marker shape (marker units, radius ~1). */
+function wpfloors_icon_path( $t ) {
+	$k = $t['is'] / $t['icon'][1];
+	$x = $t['ix'] - $t['icon'][0] * $k / 2;
+	$y = $t['iy'] - $t['icon'][1] * $k / 2;
+	return '<path class="ic" transform="translate(' . round( $x, 4 ) . ' ' . round( $y, 4 ) . ') scale(' . round( $k, 6 ) . ')" d="' . esc_attr( $t['icon'][2] ) . '"/>';
+}
+
+/** One label on the map: its marker shape, icon and name, in marker units (radius 1). */
 function wpfloors_marker( $lb, $vb ) {
 	$types = wpfloors_types();
 	if ( ! isset( $types[ $lb['type'] ] ) ) { return ''; }
 	$t     = $types[ $lb['type'] ];
-	$r     = max( $vb[2], $vb[3] ) * 0.016;
+	$r     = max( $vb[2], $vb[3] ) * 0.02;
 	$cx    = $vb[0] + $lb['x'] / 100 * $vb[2];
 	$cy    = $vb[1] + $lb['y'] / 100 * $vb[3];
 	$right = $lb['x'] > 65; // Names near the right edge go on the left of the marker.
 	return '<g class="mk" transform="translate(' . wpfloors_num( $cx ) . ' ' . wpfloors_num( $cy ) . ') scale(' . wpfloors_num( $r ) . ')">'
-		. '<path d="' . esc_attr( $t['shape'] ) . '"/>'
-		. '<text class="lt" x="' . $t['tx'] . '" y="' . $t['ty'] . '" font-size="' . $t['fs'] . '">' . esc_html( $t['letter'] ) . '</text>'
-		. ( $lb['show'] ? '<text class="nm' . ( $right ? ' end' : '' ) . '" x="' . ( $right ? '-1.7' : '1.7' ) . '" y="0.45" font-size="1.25">' . esc_html( $lb['name'] ) . '</text>' : '' )
+		. '<path class="sh" d="' . esc_attr( $t['shape'] ) . '"/>' . wpfloors_icon_path( $t )
+		. ( $lb['show'] ? '<text class="nm' . ( $right ? ' end' : '' ) . '" x="' . ( $right ? '-1.6' : '1.6' ) . '" y="0.36" font-size="1">' . esc_html( $lb['name'] ) . '</text>' : '' )
 		. '</g>';
 }
 
@@ -315,8 +324,7 @@ function wpfloors_icon( $type ) {
 	$t = wpfloors_types();
 	$t = $t[ $type ];
 	return '<svg class="wpfloors-svg wpfloors-icon" viewBox="-1.5 -1.5 3 3" aria-hidden="true" focusable="false"><g class="mk">'
-		. '<path d="' . esc_attr( $t['shape'] ) . '"/>'
-		. '<text class="lt" x="' . $t['tx'] . '" y="' . $t['ty'] . '" font-size="' . $t['fs'] . '">' . esc_html( $t['letter'] ) . '</text></g></svg>';
+		. '<path class="sh" d="' . esc_attr( $t['shape'] ) . '"/>' . wpfloors_icon_path( $t ) . '</g></svg>';
 }
 
 /** A map as inline SVG, with its labels. $map comes from wpfloors_map(). */
@@ -336,11 +344,11 @@ function wpfloors_svg( $map, $labels, $aria_label ) {
 function wpfloors_svg_css() {
 	return <<<'CSS'
 .wpfloors-svg{display:block;width:100%;height:auto;max-height:85vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-.wpfloors-svg .mk path{fill:#fff;stroke:#000;stroke-width:.14;stroke-linejoin:round}
-.wpfloors-svg .mk .lt{fill:#000;font-weight:700;text-anchor:middle}
-.wpfloors-svg .mk .nm{fill:#000;font-weight:600;stroke:#fff;stroke-width:.4;stroke-linejoin:round;paint-order:stroke}
+.wpfloors-svg .mk .sh{fill:#fff;stroke:#000;stroke-width:.12;stroke-linejoin:round}
+.wpfloors-svg .mk .ic{fill:#000}
+.wpfloors-svg .mk .nm{fill:#000;font-weight:600;stroke:#fff;stroke-width:.32;stroke-linejoin:round;paint-order:stroke}
 .wpfloors-svg .mk .nm.end{text-anchor:end}
-.wpfloors-svg.wpfloors-icon{display:inline-block;width:1.8em;height:1.8em;max-height:none;vertical-align:middle;flex:0 0 auto}
+.wpfloors-svg.wpfloors-icon{display:inline-block;width:2em;height:2em;max-height:none;vertical-align:middle;flex:0 0 auto}
 CSS;
 }
 
@@ -737,11 +745,11 @@ function renderStage(){
 /* Same marker as the PHP wpfloors_marker(). */
 function marker(lb,cls){
   var t=types[lb.type];if(!t)return null;
-  var r=Math.max(vb[2],vb[3])*0.016,cx=vb[0]+lb.x/100*vb[2],cy=vb[1]+lb.y/100*vb[3],right=lb.x>65;
+  var r=Math.max(vb[2],vb[3])*0.02,cx=vb[0]+lb.x/100*vb[2],cy=vb[1]+lb.y/100*vb[3],right=lb.x>65;
   var g=svgEl("g",{"class":"mk"+(cls?" "+cls:""),transform:"translate("+num(cx)+" "+num(cy)+") scale("+num(r)+")"});
-  g.appendChild(svgEl("path",{d:t.shape}));
-  var L=svgEl("text",{"class":"lt",x:t.tx,y:t.ty,"font-size":t.fs});L.textContent=t.letter;g.appendChild(L);
-  if(lb.show){var N=svgEl("text",{"class":"nm"+(right?" end":""),x:right?-1.7:1.7,y:0.45,"font-size":1.25});N.textContent=lb.name;g.appendChild(N);}
+  g.appendChild(svgEl("path",{"class":"sh",d:t.shape}));
+  var k=t.is/t.icon[1];g.appendChild(svgEl("path",{"class":"ic",transform:"translate("+(t.ix-t.icon[0]*k/2)+" "+(t.iy-t.icon[1]*k/2)+") scale("+k+")",d:t.icon[2]}));
+  if(lb.show){var N=svgEl("text",{"class":"nm"+(right?" end":""),x:right?-1.6:1.6,y:0.36,"font-size":1});N.textContent=lb.name;g.appendChild(N);}
   return g;
 }
 function drawMarkers(){

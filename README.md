@@ -11,12 +11,12 @@ stairs, exits, emergency rescue areas and kits) in wp-admin, without touching co
 - **`[floor_maps]`**: put this shortcode on a page to show every floor. Each floor shows the map
   with its labels, followed by the same information as a text list.
 
-Color never carries meaning. Each type of label has its own marker shape and letter, and every label
+Color never carries meaning. Each type of label has its own marker shape and icon, and every label
 also appears in the text list.
 
 ## Status
 
-2.1.1 is the current release. A fresh install has no floors and no maps.
+2.2.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -53,12 +53,24 @@ php -l wpfloors.php
 php tests/run.php            # add a folder path to also write preview HTML pages there
 ```
 
+## Credits
+
+Marker icons are from [Font Awesome Free](https://fontawesome.com) 6.7.2 (solid style), licensed
+[CC BY 4.0](https://fontawesome.com/license/free). Copyright 2024 Fonticons, Inc.
+
 ## Install
 
 Download the zip from the latest GitHub release. In wp-admin, go to Plugins → Add New → Upload
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.2.0 (2026-10-13)
+
+- Markers show a Font Awesome icon in place of a letter: door (room or service), book
+  (collection), restroom, elevator, stairs, person walking to an arrow (exit), wheelchair
+  (emergency rescue area) and first-aid kit (emergency kit). Each type keeps its own shape.
+- Markers are a little larger so the icons stay legible; names stay the same size.
 
 ### 2.1.1 (2026-10-13)
 

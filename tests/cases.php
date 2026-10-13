@@ -234,7 +234,7 @@ ok( 1 === substr_count( $html, 'class="nm end"' ), 'names near the right edge ar
 ok( false === strpos( $html, '>East stairs</text>' ) && false === strpos( $html, '>Elevator</text>' ) && false !== strpos( $html, '>Reference Desk</text>' ), 'stairs and elevator show only their symbol by default; rooms show their name' );
 ok( false !== strpos( $html, 'Stairs: <strong>East stairs</strong>' ) && false !== strpos( $html, 'Elevator: <strong>Elevator</strong>' ), 'hidden names still appear in the list' );
 ok( false !== strpos( $html, '<image href="https://example.test/up/third.svg" x="0" y="0" width="1200" height="800"/>' ), 'each floor draws its own SVG' );
-ok( false !== strpos( $html, 'translate(600 400) scale(19.2)' ) && false !== strpos( $html, 'translate(480 240) scale(19.2)' ), 'markers placed by percent of the map' );
+ok( false !== strpos( $html, 'translate(600 400) scale(24)' ) && false !== strpos( $html, 'translate(480 240) scale(24)' ), 'markers placed by percent of the map' );
 ok( 1 === substr_count( $html, 'The map for this floor isn&#8217;t available yet.' ) && false !== strpos( $html, '<strong>Annex desk</strong>' ), 'floor with a missing image still lists its labels' );
 ok( 3 === substr_count( $html, 'Open full-size map' ), 'no full-size link without a map' );
 preg_match_all( '/\sid="([^"]+)"/', $html, $m );
