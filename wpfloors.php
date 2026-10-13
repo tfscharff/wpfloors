@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Floor Maps
  * Description:       Accessible floor maps for a library or any building. Staff upload an SVG map for each floor and add every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
- * Version:           2.1.0
+ * Version:           2.1.1
  * Author:            Madeleine Clark Wallace Library
  * License:           GPL-2.0+
  * Requires at least: 5.6
@@ -571,7 +571,8 @@ function wpfloors_admin_markup() {
   <div id="wpfloors-top">
     <label for="wpfloors-floor">Floor</label>
     <select id="wpfloors-floor"></select>
-    <button type="button" class="button" id="wpfloors-add">Add a label</button>
+    <button type="button" class="button" id="wpfloors-add">Add a label by typing its position</button>
+    <span class="hint">Or click the map.</span>
   </div>
   <p id="wpfloors-mode" aria-live="polite"></p>
   <div id="wpfloors-stage"></div>
@@ -765,7 +766,7 @@ function renderRows(){
   var f=cur?floorOf(cur):null;
   $("wpfloors-table-h").textContent=f?"Labels on the "+f.name:"Labels";
   var a=list();
-  if(!a.length){var tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=5;td.textContent=f?"No labels on this floor yet. Click the map, or use Add a label.":"No floors yet.";tr.appendChild(td);tb.appendChild(tr);return;}
+  if(!a.length){var tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=5;td.textContent=f?"No labels on this floor yet. Click the map to add one.":"No floors yet.";tr.appendChild(td);tb.appendChild(tr);return;}
   a.forEach(function(lb){
     var tr=document.createElement("tr");
     var th=document.createElement("th");th.scope="row";th.textContent=lb.name;tr.appendChild(th);

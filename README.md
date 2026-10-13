@@ -16,7 +16,7 @@ also appears in the text list.
 
 ## Status
 
-2.1.0 is the current release. A fresh install has no floors and no maps.
+2.1.1 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -39,7 +39,7 @@ also appears in the text list.
   symbol says what they are. Turn it off wherever names would overlap. Every name is always in the
   list under the map.
 - Deleting a floor deletes its labels when you click Save. Reload the page before saving to undo.
-- To place a label without a mouse, use **Add a label** (or **Edit**) and type the position in
+- To place a label without a mouse, use **Add a label by typing its position** (or **Edit**) and type the position in
   **Across** and **Down** (percent of the map from the left and from the top).
 - After saving, purge your site's page cache if the public page doesn't show your change yet.
 - **Open full-size map** shows one floor on its own page (`/?wpfloors_map=<floor>`).
@@ -59,6 +59,11 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.1.1 (2026-10-13)
+
+- The Add a label button is now **Add a label by typing its position**, with "Or click the map."
+  next to it. Clicking the map is the usual way; the button is the keyboard way.
 
 ### 2.1.0 (2026-10-13)
 
