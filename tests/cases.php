@@ -240,13 +240,12 @@ $h3 = wpfloors_shortcode();
 ok( false !== strpos( $h3, 'Printer: <strong>Color printer</strong>. Pay at the desk' ) && false === strpos( $h3, '>Color printer</text>' ), 'a printer is listed under rooms and services, symbol only on the map by default' );
 ok( false !== strpos( $h3, 'M-.72-.95H.72L1.18 .95H-1.18Z' ) && false !== strpos( $h3, '<span>Printer</span>' ), 'printer has its own shape and is in the key' );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't4', 'name' => 'Podcast Studio', 'type' => 'studio', 'note' => '', 'x' => 40, 'y' => 40 );
-$GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't5', 'name' => 'Atrium', 'type' => 'text', 'note' => 'Open seating', 'x' => 50, 'y' => 20, 'show' => false );
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't5', 'name' => 'Self Checkout', 'type' => 'checkout', 'note' => '', 'x' => 50, 'y' => 20 );
 $h4 = wpfloors_shortcode();
+ok( false !== strpos( $h4, 'Checkout: <strong>Self Checkout</strong>' ) && false === strpos( $h4, '>Self Checkout</text>' ) && false !== strpos( $h4, 'M-1.3-.75H1.3V.75H-1.3Z' ) && false !== strpos( $h4, '<span>Checkout</span>' ), 'checkout: listed, symbol only on the map, its own shape, in the key' );
+ok( array() === labs( array( lbl( array( 'type' => 'text' ) ) ) ), 'the removed Text only type is no longer accepted' );
 ok( false !== strpos( $h4, 'Studio: <strong>Podcast Studio</strong>' ) && false !== strpos( $h4, '>Podcast Studio</text>' ) && false !== strpos( $h4, 'M-.62-.9H1.28L.62 .9H-1.28Z' ), 'studio: listed, named on the map, its own shape' );
-ok( false !== strpos( $h4, '<text class="nm tx" x="0" y="0.36" font-size="1">Atrium</text></g>' ), 'text-only label is just its name on the map, even when show was off' );
-ok( false !== strpos( $h4, '<span class="wpfloors-noicon"></span><span><strong>Atrium</strong>. Open seating' ), 'text-only label listed with no icon and no type prefix' );
-ok( false === strpos( $h4, '<span>Text only</span>' ), 'text-only labels are not in the key' );
-ok( true === labs( array( lbl( array( 'type' => 'text', 'show' => '0' ) ) ) )[0]['show'], 'text-only labels always show their name' );
+
 ok( 1 === substr_count( $html, 'class="nm end"' ), 'names near the right edge are anchored at the end' );
 ok( false === strpos( $html, '>East stairs</text>' ) && false === strpos( $html, '>Elevator</text>' ) && false !== strpos( $html, '>Reference Desk</text>' ), 'stairs and elevator show only their symbol by default; rooms show their name' );
 ok( false !== strpos( $html, 'Stairs: <strong>East stairs</strong>' ) && false !== strpos( $html, 'Elevator: <strong>Elevator</strong>' ), 'hidden names still appear in the list' );

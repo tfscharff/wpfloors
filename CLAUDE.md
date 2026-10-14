@@ -54,6 +54,8 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   - service (added in 2.4.0, when "room or service" was split in two)
   - printer (added in 2.6.0; listed under "Rooms and services")
   - studio (added in 2.7.0; listed under "Rooms and services")
+  - checkout (added in 2.8.0; listed under "Rooms and services")
+  (A "text only" type was added in 2.7.0 and removed in 2.8.0 at the user's request.)
   - collection
   - restroom
   - elevator
@@ -61,8 +63,6 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   - exit
   - emergency rescue area
   - emergency kit
-  - text only (added in 2.7.0): just the name on the map, no marker or icon; always shown,
-    always in the list ("Rooms and services", no type prefix), never in the key
 - `note` is optional, for example "Wait here for help if you can't use the stairs."
 
 ### Admin: wp-admin → Floor Maps
