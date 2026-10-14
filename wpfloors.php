@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Floor Maps
  * Description:       Accessible floor maps for a library or any building. Staff upload an SVG map for each floor and add every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
- * Version:           2.19.0
+ * Version:           2.20.0
  * Author:            Madeleine Clark Wallace Library
  * License:           GPL-2.0+
  * Requires at least: 5.6
@@ -165,6 +165,7 @@ function wpfloors_sanitize( $in ) {
 				'number' => ! empty( $types[ $type ]['chars'] ) ? wpfloors_number( isset( $r['number'] ) ? $r['number'] : '' ) : '',
 				'show' => wpfloors_show( isset( $r['show'] ) ? $r['show'] : null, $types[ $type ]['name_on_map'] ),
 				'pos'  => wpfloors_pos( isset( $r['pos'] ) ? $r['pos'] : null, $x ),
+				'show_icon' => wpfloors_show( isset( $r['show_icon'] ) ? $r['show_icon'] : null, true ),
 				'x'    => $x,
 				'y'    => $y,
 			);
@@ -362,9 +363,11 @@ function wpfloors_marker( $lb, $vb ) {
 		'top'    => array( '0', '-1.15', 'nm mid' ),
 		'bottom' => array( '0', '1.8', 'nm mid' ),
 	);
-	$at = $at[ $lb['pos'] ];
+	// Without its icon, the name is centered on the spot.
+	$icon = ! isset( $lb['show_icon'] ) || $lb['show_icon'];
+	$at   = $icon ? $at[ $lb['pos'] ] : array( '0', '0.36', 'nm mid' );
 	return '<g class="mk" transform="translate(' . wpfloors_num( $cx ) . ' ' . wpfloors_num( $cy ) . ') scale(' . wpfloors_num( $r ) . ')">'
-		. ( '' !== $lb['number'] || empty( $t['icon'] ) ? wpfloors_number_text( $lb['number'] ) : wpfloors_icon_path( $t ) )
+		. ( ! $icon ? '' : ( '' !== $lb['number'] || empty( $t['icon'] ) ? wpfloors_number_text( $lb['number'] ) : wpfloors_icon_path( $t ) ) )
 		. ( $lb['show'] ? '<text class="' . $at[2] . '" x="' . $at[0] . '" y="' . $at[1] . '" font-size="1">' . esc_html( $lb['name'] ) . '</text>' : '' )
 		. '</g>';
 }
@@ -438,7 +441,9 @@ function wpfloors_floor_body( $floor, $labels, $h, $full_url ) {
 	}
 
 	$used = array();
-	foreach ( $labels as $lb ) { $used[ $lb['type'] ] = true; }
+	foreach ( $labels as $lb ) {
+		if ( $lb['show_icon'] ) { $used[ $lb['type'] ] = true; } // The key explains the icons on the map.
+	}
 	if ( $used && $map ) {
 		$out .= '<div class="wpfloors-key"><p class="wpfloors-key-h">Key</p><ul>';
 		foreach ( $types as $type => $t ) {
@@ -600,6 +605,7 @@ function wpfloors_admin_markup() {
   #wpfloors-stage .wpfloors-svg{cursor:crosshair;max-height:75vh}
   #wpfloors-stage .empty{padding:20px;margin:0;color:#50575e}
   #wpfloors-stage .mk.is-pending{opacity:.55}
+  #wpfloors-stage .mk .off{opacity:.3}
   #wpfloors-stage .mk.is-active .ic,#wpfloors-stage .mk.is-active .no{fill:#2271b1}
   #wpfloors-form{background:#fff;border:1px solid #c3c4c7;border-left:4px solid #2271b1;padding:4px 16px 12px;margin:12px 0}
   #wpfloors-form legend{font-size:1.1em;font-weight:600;padding:8px 0}
@@ -645,6 +651,10 @@ function wpfloors_admin_markup() {
         <div><label for="wpfloors-note">Note (optional)</label><input id="wpfloors-note" type="text" maxlength="300" autocomplete="off"></div>
       </div>
       <div class="row">
+        <div><label class="inline"><input id="wpfloors-show-icon" type="checkbox"> Show icon on the map</label>
+          <p class="hint" style="margin:2px 0 0">For offices and collections, this is their characters. The list under the map always shows the icon.</p></div>
+      </div>
+      <div class="row">
         <div><label class="inline"><input id="wpfloors-show" type="checkbox"> Show name on the map</label>
           <p class="hint" style="margin:2px 0 0">Turn off where names would overlap. The name is always in the list under the map.</p></div>
         <div><label for="wpfloors-pos">Name position</label><select id="wpfloors-pos"><option value="right">Right</option><option value="left">Left</option><option value="top">Top</option><option value="bottom">Bottom</option></select></div>
@@ -661,7 +671,7 @@ function wpfloors_admin_markup() {
   </form>
   <h2 id="wpfloors-table-h">Labels on this floor</h2>
   <table class="widefat striped" aria-labelledby="wpfloors-table-h">
-    <thead><tr><th scope="col">Name</th><th scope="col">Type</th><th scope="col">Note</th><th scope="col">Name on map</th><th scope="col">Actions</th></tr></thead>
+    <thead><tr><th scope="col">Name</th><th scope="col">Type</th><th scope="col">Note</th><th scope="col">On the map</th><th scope="col">Actions</th></tr></thead>
     <tbody id="wpfloors-rows"></tbody>
   </table>
   <div id="wpfloors-bottom">
@@ -798,10 +808,13 @@ function marker(lb,cls){
   var t=types[lb.type];if(!t)return null;
   var r=Math.max(vb[2],vb[3])*0.02,cx=vb[0]+lb.x/100*vb[2],cy=vb[1]+lb.y/100*vb[3];
   var g=svgEl("g",{"class":"mk"+(cls?" "+cls:""),transform:"translate("+num(cx)+" "+num(cy)+") scale("+num(r)+")"});
-  if(t.icon&&!lb.number){var k=1.5/t.icon[1];g.appendChild(svgEl("path",{"class":"ic",transform:"translate("+(-t.icon[0]*k/2)+" "+(-t.icon[1]*k/2)+") scale("+k+")","stroke-width":Math.round(3/k)/10,d:t.icon[2]}));}
-  else{var no=lb.number||"#",w=0;no.split("").forEach(function(c){w+=c==="-"?0.4:(/[0-9]/.test(c)?0.6:(/[MWmw]/.test(c)?1:0.75));});var f=Math.round(Math.min(1,1.7/w)*1000)/1000,T=svgEl("text",{"class":"no",x:0,y:Math.round(0.36*f*1000)/1000,"font-size":f});T.textContent=no;g.appendChild(T);}
+  /* With both turned off, the editor still shows a faint icon so the label can be found; the public map shows nothing. */
+  var showIcon=lb.show_icon!==false,ghost=!showIcon&&!lb.show,ic=showIcon||ghost?(ghost?" off":""):null;
+  if(ic===null){}
+  else if(t.icon&&!lb.number){var k=1.5/t.icon[1];g.appendChild(svgEl("path",{"class":"ic"+ic,transform:"translate("+(-t.icon[0]*k/2)+" "+(-t.icon[1]*k/2)+") scale("+k+")","stroke-width":Math.round(3/k)/10,d:t.icon[2]}));}
+  else{var no=lb.number||"#",w=0;no.split("").forEach(function(c){w+=c==="-"?0.4:(/[0-9]/.test(c)?0.6:(/[MWmw]/.test(c)?1:0.75));});var f=Math.round(Math.min(1,1.7/w)*1000)/1000,T=svgEl("text",{"class":"no"+ic,x:0,y:Math.round(0.36*f*1000)/1000,"font-size":f});T.textContent=no;g.appendChild(T);}
   /* Same placements as the PHP wpfloors_marker(). */
-  var at={right:[1.3,0.36,"nm"],left:[-1.3,0.36,"nm end"],top:[0,-1.15,"nm mid"],bottom:[0,1.8,"nm mid"]}[lb.pos]||[1.3,0.36,"nm"];
+  var at=showIcon?({right:[1.3,0.36,"nm"],left:[-1.3,0.36,"nm end"],top:[0,-1.15,"nm mid"],bottom:[0,1.8,"nm mid"]}[lb.pos]||[1.3,0.36,"nm"]):[0,0.36,"nm mid"];
   if(lb.show){var N=svgEl("text",{"class":at[2],x:at[0],y:at[1],"font-size":1});N.textContent=lb.name;g.appendChild(N);}
   return g;
 }
@@ -818,7 +831,7 @@ function drawMarkers(){
 function pending(){
   var x=parseFloat($("wpfloors-x").value),y=parseFloat($("wpfloors-y").value);
   if(isNaN(x)||isNaN(y))return null;
-  return {name:$("wpfloors-name").value||"New label",type:$("wpfloors-type").value,number:officeNumber(),show:$("wpfloors-show").checked,pos:$("wpfloors-pos").value,x:Math.max(0,Math.min(100,x)),y:Math.max(0,Math.min(100,y))};
+  return {name:$("wpfloors-name").value||"New label",type:$("wpfloors-type").value,number:officeNumber(),show_icon:$("wpfloors-show-icon").checked,show:$("wpfloors-show").checked,pos:$("wpfloors-pos").value,x:Math.max(0,Math.min(100,x)),y:Math.max(0,Math.min(100,y))};
 }
 
 /* ---------- labels ---------- */
@@ -836,7 +849,7 @@ function renderRows(){
     var th=document.createElement("th");th.scope="row";th.textContent=lb.name;tr.appendChild(th);
     var t1=document.createElement("td");t1.textContent=(types[lb.type]?types[lb.type].label:lb.type)+(lb.number?" "+lb.number:"");tr.appendChild(t1);
     var t2=document.createElement("td");t2.textContent=lb.note||"";tr.appendChild(t2);
-    var t4=document.createElement("td");t4.textContent=lb.show?"Shown, "+({right:"right",left:"left",top:"top",bottom:"bottom"}[lb.pos]||"right"):"Hidden";tr.appendChild(t4);
+    var t4=document.createElement("td");var si=lb.show_icon!==false;t4.textContent=si&&lb.show?"Icon, name "+({right:"right",left:"left",top:"top",bottom:"bottom"}[lb.pos]||"right"):(si?"Icon only":(lb.show?"Name only":"Nothing (list only)"));tr.appendChild(t4);
     var t3=document.createElement("td");
     t3.appendChild(btn("Edit","Edit "+lb.name,function(e){openForm(lb.id,null,null,e.currentTarget);}));
     var mv=btn("Move","Move "+lb.name,function(){startMove(lb.id);});mv.disabled=!svg;t3.appendChild(mv);
@@ -857,6 +870,7 @@ function openForm(id,x,y,opener){
   $("wpfloors-note").value=lb?lb.note:"";
   $("wpfloors-number").value=lb&&lb.number?lb.number:"";syncNumber();
   $("wpfloors-show").checked=lb?!!lb.show:!!types.room.name_on_map;
+  $("wpfloors-show-icon").checked=lb?lb.show_icon!==false:true;
   $("wpfloors-pos").value=lb&&lb.pos?lb.pos:((x===null?50:x)>65?"left":"right");
   form.showTouched=!!lb; // a new label follows its type's default until staff change the checkbox
   $("wpfloors-x").value=lb?lb.x:(x===null?50:x);
@@ -879,7 +893,7 @@ function submitForm(e){
   if(!name){$("wpfloors-error").textContent="Enter a name.";$("wpfloors-name").focus();return;}
   if(isNaN(x)||x<0||x>100){$("wpfloors-error").textContent="Across must be a number from 0 to 100.";$("wpfloors-x").focus();return;}
   if(isNaN(y)||y<0||y>100){$("wpfloors-error").textContent="Down must be a number from 0 to 100.";$("wpfloors-y").focus();return;}
-  var vals={name:name,type:$("wpfloors-type").value,note:$("wpfloors-note").value.replace(/^\s+|\s+$/g,""),number:officeNumber(),show:$("wpfloors-show").checked,pos:$("wpfloors-pos").value,x:Math.round(x*100)/100,y:Math.round(y*100)/100};
+  var vals={name:name,type:$("wpfloors-type").value,note:$("wpfloors-note").value.replace(/^\s+|\s+$/g,""),number:officeNumber(),show_icon:$("wpfloors-show-icon").checked,show:$("wpfloors-show").checked,pos:$("wpfloors-pos").value,x:Math.round(x*100)/100,y:Math.round(y*100)/100};
   var lb=form.id?find(form.id):null;
   if(lb){for(var k in vals)if(vals.hasOwnProperty(k))lb[k]=vals[k];}
   else{vals.id=uid();list().push(vals);}
@@ -940,7 +954,7 @@ $("wpfloors-add-floor").onclick=addFloor;
 $("wpfloors-add").onclick=function(e){openForm(null,null,null,e.currentTarget);};
 $("wpfloors-form").onsubmit=submitForm;
 $("wpfloors-cancel").onclick=function(){closeForm(true);};
-["wpfloors-name","wpfloors-type","wpfloors-number","wpfloors-x","wpfloors-y","wpfloors-show","wpfloors-pos"].forEach(function(id){$(id).addEventListener("input",drawMarkers);$(id).addEventListener("change",drawMarkers);});
+["wpfloors-name","wpfloors-type","wpfloors-number","wpfloors-x","wpfloors-y","wpfloors-show","wpfloors-show-icon","wpfloors-pos"].forEach(function(id){$(id).addEventListener("input",drawMarkers);$(id).addEventListener("change",drawMarkers);});
 $("wpfloors-show").addEventListener("change",function(){if(form)form.showTouched=true;});
 $("wpfloors-type").addEventListener("change",syncNumber);
 $("wpfloors-type").addEventListener("change",function(){var t=types[$("wpfloors-type").value];if(form&&!form.showTouched&&t){$("wpfloors-show").checked=!!t.name_on_map;drawMarkers();}});

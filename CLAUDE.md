@@ -46,10 +46,12 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
 - Store everything in one option. Follow the `wphours` pattern: one option, and every write goes
   through a single sanitize function.
 - Labels are keyed by floor slug. Each label is
-  `{id, name, type, note, number, show, pos, x, y}`, with `x` and `y` as percentages of the map. `show` is
+  `{id, name, type, note, number, show, pos, show_icon, x, y}`, with `x` and `y` as percentages of the map. `show` is
   "Show name on the map" (2.1.0). It defaults by type: on for rooms, services, studios and collections,
   off for the rest. The list always shows every name. `pos` (2.17.0) is where the name sits: top, right,
-  bottom or left; without one, left when x > 65, otherwise right.
+  bottom or left; without one, left when x > 65, otherwise right. `show_icon` (2.20.0, default
+  on) hides the icon or characters on the map; the name is then centered on the spot, and the key
+  lists only types whose icons show on that floor's map.
 - `type` is exactly one of:
   - room
   - service (added in 2.4.0, when "room or service" was split in two)

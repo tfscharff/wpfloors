@@ -17,7 +17,7 @@ also appears in the text list.
 
 ## Status
 
-2.19.0 is the current release. A fresh install has no floors and no maps.
+2.20.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -65,6 +65,15 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.20.0 (2026-10-14)
+
+- **Show icon on the map:** each label can hide its icon (or an office's or collection's
+  characters) on the map, the same way it can hide its name. It's on by default. With the icon
+  off, the name is centered on the spot. The list under the map always shows the icon, and the key
+  lists only the icons shown on that map. The labels table's "On the map" column says what shows.
+- In the editor, a label with both its icon and name turned off still shows a faint icon so you can
+  find it; the public map shows nothing for it.
 
 ### 2.19.0 (2026-10-14)
 

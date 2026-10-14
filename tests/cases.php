@@ -57,7 +57,7 @@ ok( ! isset( $s['labels']['gone'] ), 'labels for a deleted floor dropped' );
 
 /* ---------------- labels ---------------- */
 
-ok( labs( array( lbl() ) ) === array( array( 'id' => 'a1', 'name' => 'Room', 'type' => 'room', 'note' => '', 'number' => '', 'show' => true, 'pos' => 'right', 'x' => 10.0, 'y' => 20.0 ) ), 'clean label kept as is' );
+ok( labs( array( lbl() ) ) === array( array( 'id' => 'a1', 'name' => 'Room', 'type' => 'room', 'note' => '', 'number' => '', 'show' => true, 'pos' => 'right', 'show_icon' => true, 'x' => 10.0, 'y' => 20.0 ) ), 'clean label kept as is' );
 
 /* "Show name on the map": a yes/no value, or the type's default when missing or unclear. */
 $l = labs( array(
@@ -291,6 +291,16 @@ $m = wpfloors_marker( array( 'type' => 'room', 'name' => 'Top', 'number' => '', 
 ok( false !== strpos( $m, '<text class="nm mid" x="0" y="-1.15" font-size="1">Top</text>' ), 'a name on top is centered above the icon' );
 $m = wpfloors_marker( array( 'type' => 'room', 'name' => 'Bottom', 'number' => '', 'show' => true, 'pos' => 'bottom', 'x' => 50, 'y' => 50 ), array( 0, 0, 100, 100 ) );
 ok( false !== strpos( $m, '<text class="nm mid" x="0" y="1.8" font-size="1">Bottom</text>' ), 'a name below is centered under the icon' );
+ok( array( true, false, false, true ) === array_column( labs( array( lbl( array( 'id' => 'i1' ) ), lbl( array( 'id' => 'i2', 'show_icon' => false ) ), lbl( array( 'id' => 'i3', 'show_icon' => '0' ) ), lbl( array( 'id' => 'i4', 'show_icon' => 'banana' ) ) ) ), 'show_icon' ), 'show icon: on by default, accepts yes/no values' );
+$m = wpfloors_marker( array( 'type' => 'room', 'name' => 'Atrium', 'number' => '', 'show' => true, 'show_icon' => false, 'pos' => 'top', 'x' => 50, 'y' => 50 ), array( 0, 0, 100, 100 ) );
+ok( false === strpos( $m, 'class="ic"' ) && false !== strpos( $m, '<text class="nm mid" x="0" y="0.36" font-size="1">Atrium</text>' ), 'without its icon, the name is centered on the spot' );
+$m = wpfloors_marker( array( 'type' => 'office', 'name' => 'Dean', 'number' => '214', 'show' => false, 'show_icon' => false, 'pos' => 'right', 'x' => 50, 'y' => 50 ), array( 0, 0, 100, 100 ) );
+ok( false === strpos( $m, '<text' ) && false === strpos( $m, '<path' ), 'with both off, nothing is drawn on the map' );
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'] = array( array( 'id' => 'k1', 'name' => 'Lift', 'type' => 'elevator', 'note' => '', 'x' => 50, 'y' => 50, 'show_icon' => false ), array( 'id' => 'k2', 'name' => 'Desk', 'type' => 'service', 'note' => '', 'x' => 40, 'y' => 50 ) );
+$h9 = wpfloors_shortcode();
+$h9 = substr( $h9, strpos( $h9, 'id="wpfloors-third"' ) );
+$h9 = substr( $h9, 0, strpos( $h9, '</section>' ) );
+ok( false === strpos( $h9, '<span>Elevator</span>' ) && false !== strpos( $h9, '<span>Service</span>' ) && false !== strpos( $h9, '<strong>Lift</strong>' ), 'the key lists only icons shown on the map; the list still has every label' );
 ok( false === strpos( $html, '>East restroom</text>' ) && false === strpos( $html, '>Elevator</text>' ) && false !== strpos( $html, '>Reference Desk</text>' ), 'restrooms and elevators show only their symbol by default; rooms show their name' );
 ok( false !== strpos( $html, '<span class="wpfloors-sr">Restroom: </span><strong>East restroom</strong>' ) && false !== strpos( $html, '<span class="wpfloors-sr">Elevator: </span><strong>Elevator</strong>' ), 'hidden names still appear in the list' );
 ok( false !== strpos( $html, '<image href="https://example.test/up/third.svg" x="0" y="0" width="1200" height="800"/>' ), 'each floor draws its own SVG' );
