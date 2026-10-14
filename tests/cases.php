@@ -253,7 +253,7 @@ ok( '' === labs( array( lbl( array( 'type' => 'office', 'number' => array( 1 ) )
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't9', 'name' => "Dean's office", 'type' => 'office', 'number' => '2M201', 'note' => '', 'x' => 30, 'y' => 30 );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't10', 'name' => 'Office 7', 'type' => 'office', 'number' => '7', 'note' => '', 'x' => 35, 'y' => 30 );
 $h7 = wpfloors_shortcode();
-ok( false !== strpos( $h7, '<text class="no" x="0" y="0.243" font-size="0.676">2M201</text>' ), 'a 5-character number shrinks to fit' );
+ok( false !== strpos( $h7, '<text class="no" x="0" y="0.212" font-size="0.588">2M201</text>' ), 'a 5-character number shrinks to fit' );
 ok( false !== strpos( $h7, '<text class="no" x="0" y="0.36" font-size="1">7</text>' ), 'a short number is full size' );
 ok( false !== strpos( $h7, '<span class="wpfloors-sr">Office 2M201: </span><strong>Dean&#039;s office</strong>' ), 'screen readers hear the office number' );
 ok( false !== strpos( $h7, '<text class="no" x="0" y="0.36" font-size="1">#</text></g></svg><span>Office</span>' ), 'office: in the key as #' );
@@ -266,7 +266,7 @@ $nb  = substr( $nb, strrpos( $nb, '<li>' ) );
 ok( false !== strpos( $nd, '>ND</text>' ) && false === strpos( $nd, 'class="ic"' ), 'a collection with characters shows them in place of the book, and screen readers hear them' );
 ok( false !== strpos( $nb, 'class="ic"' ) && false === strpos( $nb, 'class="no"' ), 'a collection without characters keeps the book icon' );
 ok( false !== strpos( $h8, '>ND</text><text class="nm"' ), 'on the map too, the characters replace the icon' );
-ok( false === strpos( $h7, 'class="sh"' ) && false !== strpos( $h7, 'stroke-width="76.8"' ), 'no marker shapes; icons get a white outline' );
+ok( false === strpos( $h7, 'class="sh"' ) && false !== strpos( $h7, 'stroke-width="87.8"' ), 'no marker shapes; icons get a white outline' );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't6', 'name' => 'Main Entrance', 'type' => 'exit', 'note' => '', 'x' => 60, 'y' => 90 );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't7', 'name' => 'North stairwell door', 'type' => 'emergency-exit', 'note' => 'Alarmed', 'x' => 10, 'y' => 10 );
 $h5 = wpfloors_shortcode();
@@ -288,9 +288,9 @@ ok( array( 'right', 'left', 'top', 'bottom', 'left', 'right' ) === array_column(
 	lbl( array( 'id' => 'p6', 'pos' => 'middle<script>' ) ),
 ) ), 'pos' ), 'name position: a valid choice, or right (left near the right edge) by default' );
 $m = wpfloors_marker( array( 'type' => 'room', 'name' => 'Top', 'number' => '', 'show' => true, 'pos' => 'top', 'x' => 50, 'y' => 50 ), array( 0, 0, 100, 100 ) );
-ok( false !== strpos( $m, '<text class="nm mid" x="0" y="-1.45" font-size="1">Top</text>' ), 'a name on top is centered above the icon' );
+ok( false !== strpos( $m, '<text class="nm mid" x="0" y="-1.3" font-size="1">Top</text>' ), 'a name on top is centered above the icon' );
 $m = wpfloors_marker( array( 'type' => 'room', 'name' => 'Bottom', 'number' => '', 'show' => true, 'pos' => 'bottom', 'x' => 50, 'y' => 50 ), array( 0, 0, 100, 100 ) );
-ok( false !== strpos( $m, '<text class="nm mid" x="0" y="2.05" font-size="1">Bottom</text>' ), 'a name below is centered under the icon' );
+ok( false !== strpos( $m, '<text class="nm mid" x="0" y="1.95" font-size="1">Bottom</text>' ), 'a name below is centered under the icon' );
 ok( false === strpos( $html, '>East restroom</text>' ) && false === strpos( $html, '>Elevator</text>' ) && false !== strpos( $html, '>Reference Desk</text>' ), 'restrooms and elevators show only their symbol by default; rooms show their name' );
 ok( false !== strpos( $html, '<span class="wpfloors-sr">Restroom: </span><strong>East restroom</strong>' ) && false !== strpos( $html, '<span class="wpfloors-sr">Elevator: </span><strong>Elevator</strong>' ), 'hidden names still appear in the list' );
 ok( false !== strpos( $html, '<image href="https://example.test/up/third.svg" x="0" y="0" width="1200" height="800"/>' ), 'each floor draws its own SVG' );

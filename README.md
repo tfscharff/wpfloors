@@ -17,7 +17,7 @@ also appears in the text list.
 
 ## Status
 
-2.17.0 is the current release. A fresh install has no floors and no maps.
+2.18.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -65,6 +65,13 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.18.0 (2026-10-14)
+
+- Every icon on the map is now the same height, 1.75 times the height of the name text, so all
+  icons are a little smaller (restroom and elevator no longer have their own size). Names sit a
+  little closer to their icons, and office and collection characters fit within about an icon's
+  width.
 
 ### 2.17.0 (2026-10-14)
 
