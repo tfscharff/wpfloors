@@ -112,7 +112,7 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   from screen readers so nothing is read twice. Add a code comment explaining why, so nobody "fixes"
   it later.
 - **Color never carries meaning.** That is a firm rule from the user. Each type gets its own icon, in
-  black with a white outline, all 1.75 units tall (name text is 1; 2.18.0). Markers have no shapes around them (removed in 2.13.0 as too
+  black with a white outline, all 1.5 units tall (name text is 1; 2.19.0, after trying 2 and 1.75). Markers have no shapes around them (removed in 2.13.0 as too
   cluttered; don't add them back). A short legend in text sits under each drawing. The
   icons are Font Awesome Free 6.7.2 solid (CC BY 4.0), embedded as path data in `wpfloors_types()`.
   Never load Font Awesome's CSS or JS, and keep the credit in README.
