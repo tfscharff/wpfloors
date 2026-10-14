@@ -72,7 +72,7 @@ $l = labs( array(
 	lbl( array( 'id' => 's9', 'type' => 'room', 'show' => 'banana' ) ),
 	lbl( array( 'id' => 's10', 'type' => 'elevator', 'show' => array( true ) ) ),
 ) );
-ok( array( true, true, false, false, false, true, false, true, true, false ) === array_column( $l, 'show' ), 'show defaults by type (rooms and collections yes, the rest no) and accepts yes/no values' );
+ok( array( true, true, false, true, false, true, false, true, true, false ) === array_column( $l, 'show' ), 'show defaults by type (rooms, collections and entrances yes; restrooms no) and accepts yes/no values' );
 $l = labs( array(
 	lbl( array( 'name' => '<script>alert(1)</script>Reading <b>Room</b>' ) ),
 	lbl( array( 'id' => 'a2', 'name' => "  Two\nlines\t here " ) ),
@@ -227,7 +227,7 @@ $GLOBALS['wpf_options'][ WPFLOORS_OPTION ] = array(
 $html = wpfloors_shortcode();
 ok( false === strpos( $html, '<script' ) && false !== strpos( $html, '&lt;script&gt;' ), 'stray HTML shown as text, never markup' );
 ok( false !== strpos( $html, 'a &lt; b &quot;q&quot;' ) && false !== strpos( $html, 'Third &quot;Floor&quot; &amp; Co' ), 'names escaped' );
-ok( false !== strpos( $html, '<h3>Rooms and services</h3>' ) && false !== strpos( $html, '<h3>Collections</h3>' ) && false !== strpos( $html, '<h3>Restrooms, elevators and stairs</h3>' ) && false !== strpos( $html, '<h3>Emergency: exits, rescue areas and kits</h3>' ), 'list grouped under the four headings' );
+ok( false !== strpos( $html, '<h3>Rooms and services</h3>' ) && false !== strpos( $html, '<h3>Collections</h3>' ) && false !== strpos( $html, '<h3>Restrooms, elevators, stairs and entrances</h3>' ) && false !== strpos( $html, '<h3>Emergency: exits, rescue areas and kits</h3>' ), 'list grouped under the four headings' );
 ok( strpos( $html, '<strong>a &lt; b' ) < strpos( $html, '<strong>Archives' ), 'groups sorted by name' );
 ok( false !== strpos( $html, "Wait here for help if you can&#039;t use the stairs." ), 'note in the list' );
 ok( false !== strpos( $html, 'Stairs: <strong>East stairs</strong>' ) && false !== strpos( $html, '<strong>Reference Desk</strong>. Ask here' ), 'type said only in mixed groups' );
@@ -244,6 +244,12 @@ $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' =>
 $h4 = wpfloors_shortcode();
 ok( false !== strpos( $h4, 'Checkout: <strong>Self Checkout</strong>' ) && false === strpos( $h4, '>Self Checkout</text>' ) && false !== strpos( $h4, 'M-1.3-.75H1.3V.75H-1.3Z' ) && false !== strpos( $h4, '<span>Checkout</span>' ), 'checkout: listed, symbol only on the map, its own shape, in the key' );
 ok( array() === labs( array( lbl( array( 'type' => 'text' ) ) ) ), 'the removed Text only type is no longer accepted' );
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't6', 'name' => 'Main Entrance', 'type' => 'exit', 'note' => '', 'x' => 60, 'y' => 90 );
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't7', 'name' => 'North stairwell door', 'type' => 'emergency-exit', 'note' => 'Alarmed', 'x' => 10, 'y' => 10 );
+$h5 = wpfloors_shortcode();
+ok( false !== strpos( $h5, '<h3>Restrooms, elevators, stairs and entrances</h3><ul><li>' ) && false !== strpos( $h5, '<strong>Main Entrance</strong>' ) && false !== strpos( $h5, '>Main Entrance</text>' ), 'entrances are listed with restrooms, elevators and stairs, named on the map' );
+ok( false !== strpos( $h5, '<h3>Emergency: exits, rescue areas and kits</h3>' ) && false !== strpos( $h5, '<strong>North stairwell door</strong>. Alarmed' ) && false === strpos( $h5, '>North stairwell door</text>' ), 'emergency exits are listed under Emergency, symbol only on the map' );
+ok( false !== strpos( $h5, '<span>Entrance and exit</span>' ) && false !== strpos( $h5, '<span>Emergency exit</span>' ), 'both are in the key' );
 ok( false !== strpos( $h4, 'Studio: <strong>Podcast Studio</strong>' ) && false !== strpos( $h4, '>Podcast Studio</text>' ) && false !== strpos( $h4, 'M-.62-.9H1.28L.62 .9H-1.28Z' ), 'studio: listed, named on the map, its own shape' );
 
 ok( 1 === substr_count( $html, 'class="nm end"' ), 'names near the right edge are anchored at the end' );

@@ -16,7 +16,7 @@ also appears in the text list.
 
 ## Status
 
-2.8.0 is the current release. A fresh install has no floors and no maps.
+2.9.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -64,6 +64,15 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.9.0 (2026-10-14)
+
+- **Exit** is now **Entrance and exit**, for everyday doors. Same icon and shape; it's listed under
+  "Restrooms, elevators, stairs and entrances" (renamed from "Restrooms, elevators and stairs") and
+  shows its name on the map by default. Labels saved before 2.9.0 keep their own setting.
+- New **Emergency exit** type for emergency-only doors: Font Awesome running-person icon in a
+  starburst, listed under "Emergency: exits, rescue areas and kits", symbol only on the map by
+  default.
 
 ### 2.8.0 (2026-10-14)
 

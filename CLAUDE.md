@@ -60,7 +60,8 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   - restroom
   - elevator
   - stairs
-  - exit
+  - exit (shown as "Entrance and exit" since 2.9.0; listed with restrooms, elevators and stairs)
+  - emergency-exit (added in 2.9.0; listed under Emergency)
   - emergency rescue area
   - emergency kit
 - `note` is optional, for example "Wait here for help if you can't use the stairs."
@@ -88,7 +89,7 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   - the same labels as a list, grouped under these headings:
     - **Rooms and services**
     - **Collections**
-    - **Restrooms, elevators and stairs**
+    - **Restrooms, elevators, stairs and entrances** (renamed in 2.9.0)
     - **Emergency: exits, rescue areas and kits**
 - Each list item includes its note.
 - A floor with no labels shows its map and "Nothing listed on this floor yet." A floor whose SVG is
