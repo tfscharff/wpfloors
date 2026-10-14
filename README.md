@@ -16,7 +16,7 @@ also appears in the text list.
 
 ## Status
 
-2.6.0 is the current release. A fresh install has no floors and no maps.
+2.7.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -64,6 +64,13 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.7.0 (2026-10-14)
+
+- New **Studio** label type: Font Awesome headphones icon in a parallelogram, listed under "Rooms
+  and services", name shown on the map by default.
+- New **Text only** label type: just its name on the map, centered on the spot, with no marker or
+  icon. It's always listed under "Rooms and services" and isn't in the key.
 
 ### 2.6.0 (2026-10-13)
 

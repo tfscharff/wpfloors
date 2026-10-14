@@ -47,12 +47,13 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   through a single sanitize function.
 - Labels are keyed by floor slug. Each label is
   `{id, name, type, note, show, x, y}`, with `x` and `y` as percentages of the map. `show` is
-  "Show name on the map" (2.1.0). It defaults by type: on for rooms, services and collections,
+  "Show name on the map" (2.1.0). It defaults by type: on for rooms, services, studios and collections,
   off for the rest. The list always shows every name.
 - `type` is exactly one of:
   - room
   - service (added in 2.4.0, when "room or service" was split in two)
   - printer (added in 2.6.0; listed under "Rooms and services")
+  - studio (added in 2.7.0; listed under "Rooms and services")
   - collection
   - restroom
   - elevator
@@ -60,6 +61,8 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   - exit
   - emergency rescue area
   - emergency kit
+  - text only (added in 2.7.0): just the name on the map, no marker or icon; always shown,
+    always in the list ("Rooms and services", no type prefix), never in the key
 - `note` is optional, for example "Wait here for help if you can't use the stairs."
 
 ### Admin: wp-admin → Floor Maps
