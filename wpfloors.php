@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Floor Maps
  * Description:       Accessible floor maps for a library or any building. Staff upload an SVG map for each floor and add every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
- * Version:           2.14.0
+ * Version:           2.15.0
  * Author:            Madeleine Clark Wallace Library
  * License:           GPL-2.0+
  * Requires at least: 5.6
@@ -97,9 +97,9 @@ function wpfloors_show( $v, $default ) {
 	return (bool) $default;
 }
 
-/** Characters shown in place of an icon: up to 5 letters and digits, e.g. "214", "2M201" or "ND". */
+/** Characters shown in place of an icon: up to 5 letters, digits and hyphens, e.g. "214", "2M201" or "ND-NK". */
 function wpfloors_number( $v ) {
-	return is_scalar( $v ) && ! is_bool( $v ) ? substr( preg_replace( '/[^A-Za-z0-9]/', '', (string) $v ), 0, 5 ) : '';
+	return is_scalar( $v ) && ! is_bool( $v ) ? substr( preg_replace( '/[^A-Za-z0-9-]/', '', (string) $v ), 0, 5 ) : '';
 }
 
 /** A URL-safe floor slug: lowercase letters, digits and hyphens. */
@@ -325,14 +325,14 @@ function wpfloors_icon_path( $t ) {
 /**
  * Characters in place of an icon: an office's number ("#" when it has none) or a collection's letters. The text shrinks to stay within 2.3
  * units, about the width of an icon. At size 1 a bold digit is about 0.6 units wide, M and W about 1,
- * and other letters about 0.75: "214" is full size, "88888" about three-quarters, "WWWWW" under half.
+ * a hyphen about 0.4, and other letters about 0.75: "214" is full size, "88888" about three-quarters, "WWWWW" under half.
  * The admin script uses the same formula.
  */
 function wpfloors_number_text( $number ) {
 	if ( '' === $number ) { $number = '#'; }
 	$w = 0;
 	foreach ( str_split( $number ) as $c ) {
-		$w += ctype_digit( $c ) ? 0.6 : ( false !== strpos( 'MWmw', $c ) ? 1 : 0.75 );
+		$w += '-' === $c ? 0.4 : ( ctype_digit( $c ) ? 0.6 : ( false !== strpos( 'MWmw', $c ) ? 1 : 0.75 ) );
 	}
 	$f = round( min( 1, 2.3 / $w ), 3 );
 	return '<text class="no" x="0" y="' . round( 0.36 * $f, 3 ) . '" font-size="' . $f . '">' . esc_html( $number ) . '</text>';
@@ -622,7 +622,7 @@ function wpfloors_admin_markup() {
         <div><label for="wpfloors-name">Name</label><input id="wpfloors-name" type="text" maxlength="100" autocomplete="off"></div>
         <div><label for="wpfloors-type">Type</label><select id="wpfloors-type"></select></div>
         <div id="wpfloors-number-row" hidden><label for="wpfloors-number" id="wpfloors-number-label">Office number</label><input id="wpfloors-number" type="text" maxlength="5" autocomplete="off" aria-describedby="wpfloors-number-hint">
-          <p class="hint" id="wpfloors-number-hint" style="margin:2px 0 0">Up to 5 letters and digits, shown on the map in place of an icon.</p></div>
+          <p class="hint" id="wpfloors-number-hint" style="margin:2px 0 0">Up to 5 letters, digits and hyphens, shown on the map in place of an icon.</p></div>
       </div>
       <div class="row">
         <div><label for="wpfloors-note">Note (optional)</label><input id="wpfloors-note" type="text" maxlength="300" autocomplete="off"></div>
@@ -781,7 +781,7 @@ function marker(lb,cls){
   var r=Math.max(vb[2],vb[3])*0.02,cx=vb[0]+lb.x/100*vb[2],cy=vb[1]+lb.y/100*vb[3],right=lb.x>65;
   var g=svgEl("g",{"class":"mk"+(cls?" "+cls:""),transform:"translate("+num(cx)+" "+num(cy)+") scale("+num(r)+")"});
   if(t.icon&&!lb.number){var k=2/Math.max(t.icon[0],t.icon[1]);g.appendChild(svgEl("path",{"class":"ic",transform:"translate("+(-t.icon[0]*k/2)+" "+(-t.icon[1]*k/2)+") scale("+k+")","stroke-width":Math.round(3/k)/10,d:t.icon[2]}));}
-  else{var no=lb.number||"#",w=0;no.split("").forEach(function(c){w+=/[0-9]/.test(c)?0.6:(/[MWmw]/.test(c)?1:0.75);});var f=Math.round(Math.min(1,2.3/w)*1000)/1000,T=svgEl("text",{"class":"no",x:0,y:Math.round(0.36*f*1000)/1000,"font-size":f});T.textContent=no;g.appendChild(T);}
+  else{var no=lb.number||"#",w=0;no.split("").forEach(function(c){w+=c==="-"?0.4:(/[0-9]/.test(c)?0.6:(/[MWmw]/.test(c)?1:0.75));});var f=Math.round(Math.min(1,2.3/w)*1000)/1000,T=svgEl("text",{"class":"no",x:0,y:Math.round(0.36*f*1000)/1000,"font-size":f});T.textContent=no;g.appendChild(T);}
   if(lb.show){var N=svgEl("text",{"class":"nm"+(right?" end":""),x:right?-1.6:1.6,y:0.36,"font-size":1});N.textContent=lb.name;g.appendChild(N);}
   return g;
 }
@@ -803,7 +803,7 @@ function pending(){
 
 /* ---------- labels ---------- */
 /* Same rules as the PHP wpfloors_number(): only types with chars (office, collection) have them. */
-function officeNumber(){var t=types[$("wpfloors-type").value];return t&&t.chars?$("wpfloors-number").value.replace(/[^A-Za-z0-9]/g,"").slice(0,5):"";}
+function officeNumber(){var t=types[$("wpfloors-type").value];return t&&t.chars?$("wpfloors-number").value.replace(/[^A-Za-z0-9-]/g,"").slice(0,5):"";}
 function syncNumber(){var t=types[$("wpfloors-type").value];$("wpfloors-number-row").hidden=!(t&&t.chars);if(t&&t.chars)$("wpfloors-number-label").textContent=t.chars;}
 function renderRows(){
   var tb=$("wpfloors-rows");tb.innerHTML="";

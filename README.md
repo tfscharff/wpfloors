@@ -17,7 +17,7 @@ also appears in the text list.
 
 ## Status
 
-2.14.0 is the current release. A fresh install has no floors and no maps.
+2.15.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -65,6 +65,11 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.15.0 (2026-10-14)
+
+- Office numbers and collection characters can include hyphens, e.g. "ND-NK" (still up to 5
+  characters).
 
 ### 2.14.0 (2026-10-14)
 
