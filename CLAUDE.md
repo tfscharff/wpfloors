@@ -63,7 +63,7 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   (A "text only" type was added in 2.7.0 and removed in 2.8.0 at the user's request.)
   - collection (since 2.14.0 it can have up to 5 characters in `number` too, shown in place of the
     book icon; with none it keeps the icon)
-  - restroom
+  - restroom (gender-neutral toilet icon since 2.16.0, at the user's request)
   - elevator
   - exit (shown as "Entrance and exit" since 2.9.0; listed with restrooms and elevators)
   (A "stairs" type existed until 2.11.0, when it was removed at the user's request.)

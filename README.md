@@ -17,7 +17,7 @@ also appears in the text list.
 
 ## Status
 
-2.15.0 is the current release. A fresh install has no floors and no maps.
+2.16.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -65,6 +65,11 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.16.0 (2026-10-14)
+
+- **Restroom** uses Font Awesome's gender-neutral toilet icon in place of the man and woman.
+- The restroom and elevator icons are 10% smaller.
 
 ### 2.15.0 (2026-10-14)
 
