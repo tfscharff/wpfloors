@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Floor Maps
  * Description:       Accessible floor maps for a library or any building. Staff upload an SVG map for each floor and add every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
- * Version:           2.10.0
+ * Version:           2.10.1
  * Author:            Madeleine Clark Wallace Library
  * License:           GPL-2.0+
  * Requires at least: 5.6
@@ -421,8 +421,10 @@ function wpfloors_floor_body( $floor, $labels, $h, $full_url ) {
 		$out .= '<div class="wpfloors-group"><h' . $h . '>' . esc_html( $heading ) . '</h' . $h . '><ul>';
 		foreach ( $items as $lb ) {
 			$out .= '<li>' . wpfloors_icon( $lb['type'] ) . '<span>';
-			if ( count( $kinds ) > 1 ) { // Say the type when a group mixes types, e.g. "Stairs: East stairs".
-				$out .= esc_html( $types[ $lb['type'] ]['label'] ) . ': ';
+			// On screen the icon shows the type (the key spells them out). The icon is hidden from
+			// screen readers, so when a group mixes types they hear it instead: "Stairs: East stairs".
+			if ( count( $kinds ) > 1 ) {
+				$out .= '<span class="wpfloors-sr">' . esc_html( $types[ $lb['type'] ]['label'] ) . ': </span>';
 			}
 			$out .= '<strong>' . esc_html( $lb['name'] ) . '</strong>';
 			if ( '' !== $lb['note'] ) { $out .= '. ' . esc_html( $lb['note'] ); }

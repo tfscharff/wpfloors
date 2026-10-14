@@ -92,7 +92,8 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
     - **Collections**
     - **Restrooms, elevators, stairs and entrances** (renamed in 2.9.0)
     - **Emergency: exits, rescue areas and kits**
-- Each list item includes its note.
+- Each list item is its icon, name and note. The type isn't written on screen (the key spells types
+  out); in mixed groups it is screen-reader-only text, because the icons are aria-hidden (2.10.1).
 - A floor with no labels shows its map and "Nothing listed on this floor yet." A floor whose SVG is
   missing shows "The map for this floor isn't available yet." and its list. With no floors, the
   shortcode says "No floor maps yet." 

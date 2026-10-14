@@ -16,7 +16,7 @@ also appears in the text list.
 
 ## Status
 
-2.10.0 is the current release. A fresh install has no floors and no maps.
+2.10.1 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -64,6 +64,12 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.10.1 (2026-10-14)
+
+- The lists under each map no longer spell out the type in each row ("Stairs: East stairs"). Each
+  row is its icon and name; the key spells out the types. Screen readers still hear the type, since
+  they skip the icons.
 
 ### 2.10.0 (2026-10-14)
 
