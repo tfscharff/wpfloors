@@ -60,8 +60,8 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   - collection
   - restroom
   - elevator
-  - stairs
-  - exit (shown as "Entrance and exit" since 2.9.0; listed with restrooms, elevators and stairs)
+  - exit (shown as "Entrance and exit" since 2.9.0; listed with restrooms and elevators)
+  (A "stairs" type existed until 2.11.0, when it was removed at the user's request.)
   - emergency-exit (added in 2.9.0; listed under Emergency)
   - emergency rescue area
   - emergency kit
@@ -90,7 +90,7 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   - the same labels as a list, grouped under these headings:
     - **Rooms and services**
     - **Collections**
-    - **Restrooms, elevators, stairs and entrances** (renamed in 2.9.0)
+    - **Restrooms, elevators and entrances** (renamed in 2.9.0 and 2.11.0)
     - **Emergency: exits, rescue areas and kits**
 - Each list item is its icon, name and note. The type isn't written on screen (the key spells types
   out); in mixed groups it is screen-reader-only text, because the icons are aria-hidden (2.10.1).

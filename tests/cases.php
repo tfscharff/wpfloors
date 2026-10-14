@@ -68,7 +68,7 @@ $l = labs( array(
 	lbl( array( 'id' => 's5', 'type' => 'room', 'show' => false ) ),
 	lbl( array( 'id' => 's6', 'type' => 'kit', 'show' => true ) ),
 	lbl( array( 'id' => 's7', 'type' => 'room', 'show' => '0' ) ),
-	lbl( array( 'id' => 's8', 'type' => 'stairs', 'show' => 1 ) ),
+	lbl( array( 'id' => 's8', 'type' => 'restroom', 'show' => 1 ) ),
 	lbl( array( 'id' => 's9', 'type' => 'room', 'show' => 'banana' ) ),
 	lbl( array( 'id' => 's10', 'type' => 'elevator', 'show' => array( true ) ) ),
 ) );
@@ -214,7 +214,7 @@ $GLOBALS['wpf_options'][ WPFLOORS_OPTION ] = array(
 		'main'  => array(
 			array( 'id' => 'r1', 'name' => 'Reference Desk', 'type' => 'room', 'note' => 'Ask here', 'x' => 40, 'y' => 30 ),
 			array( 'id' => 'r2', 'name' => 'a < b "q"', 'type' => 'collection', 'note' => '', 'x' => 90, 'y' => 30 ),
-			array( 'id' => 'r3', 'name' => 'East stairs', 'type' => 'stairs', 'note' => '', 'x' => 70, 'y' => 30 ),
+			array( 'id' => 'r3', 'name' => 'East restroom', 'type' => 'restroom', 'note' => '', 'x' => 70, 'y' => 30 ),
 			array( 'id' => 'r4', 'name' => 'Elevator', 'type' => 'elevator', 'note' => '', 'x' => 72, 'y' => 60 ),
 			array( 'id' => 'r5', 'name' => 'Rescue area', 'type' => 'rescue', 'note' => "Wait here for help if you can't use the stairs.", 'x' => 20, 'y' => 80 ),
 			array( 'id' => 'r6', 'name' => '&lt;script&gt;', 'type' => 'kit', 'note' => $evil, 'x' => 5, 'y' => 5 ),
@@ -227,10 +227,10 @@ $GLOBALS['wpf_options'][ WPFLOORS_OPTION ] = array(
 $html = wpfloors_shortcode();
 ok( false === strpos( $html, '<script' ) && false !== strpos( $html, '&lt;script&gt;' ), 'stray HTML shown as text, never markup' );
 ok( false !== strpos( $html, 'a &lt; b &quot;q&quot;' ) && false !== strpos( $html, 'Third &quot;Floor&quot; &amp; Co' ), 'names escaped' );
-ok( false !== strpos( $html, '<h3>Rooms and services</h3>' ) && false !== strpos( $html, '<h3>Collections</h3>' ) && false !== strpos( $html, '<h3>Restrooms, elevators, stairs and entrances</h3>' ) && false !== strpos( $html, '<h3>Emergency: exits, rescue areas and kits</h3>' ), 'list grouped under the four headings' );
+ok( false !== strpos( $html, '<h3>Rooms and services</h3>' ) && false !== strpos( $html, '<h3>Collections</h3>' ) && false !== strpos( $html, '<h3>Restrooms, elevators and entrances</h3>' ) && false !== strpos( $html, '<h3>Emergency: exits, rescue areas and kits</h3>' ), 'list grouped under the four headings' );
 ok( strpos( $html, '<strong>a &lt; b' ) < strpos( $html, '<strong>Archives' ), 'groups sorted by name' );
 ok( false !== strpos( $html, "Wait here for help if you can&#039;t use the stairs." ), 'note in the list' );
-ok( false !== strpos( $html, '<span class="wpfloors-sr">Stairs: </span><strong>East stairs</strong>' ) && false !== strpos( $html, '<strong>Reference Desk</strong>. Ask here' ), 'type said only in mixed groups' );
+ok( false !== strpos( $html, '<span class="wpfloors-sr">Restroom: </span><strong>East restroom</strong>' ) && false !== strpos( $html, '<strong>Reference Desk</strong>. Ask here' ), 'type said only in mixed groups' );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't2', 'name' => 'Help Desk', 'type' => 'service', 'note' => '', 'x' => 20, 'y' => 20 );
 $h2 = wpfloors_shortcode();
 ok( false !== strpos( $h2, '<span class="wpfloors-sr">Room: </span><strong>Study room</strong>' ) && false !== strpos( $h2, '<span class="wpfloors-sr">Service: </span><strong>Help Desk</strong>' ), 'rooms and services share a group and say which is which' );
@@ -244,10 +244,11 @@ $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' =>
 $h4 = wpfloors_shortcode();
 ok( false !== strpos( $h4, '<span class="wpfloors-sr">Checkout: </span><strong>Self Checkout</strong>' ) && false === strpos( $h4, '>Self Checkout</text>' ) && false !== strpos( $h4, 'M-1.3-.75H1.3V.75H-1.3Z' ) && false !== strpos( $h4, '<span>Checkout</span>' ), 'checkout: listed, symbol only on the map, its own shape, in the key' );
 ok( array() === labs( array( lbl( array( 'type' => 'text' ) ) ) ), 'the removed Text only type is no longer accepted' );
+ok( array() === labs( array( lbl( array( 'type' => 'stairs' ) ) ) ), 'the removed Stairs type is no longer accepted' );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't6', 'name' => 'Main Entrance', 'type' => 'exit', 'note' => '', 'x' => 60, 'y' => 90 );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't7', 'name' => 'North stairwell door', 'type' => 'emergency-exit', 'note' => 'Alarmed', 'x' => 10, 'y' => 10 );
 $h5 = wpfloors_shortcode();
-ok( false !== strpos( $h5, '<h3>Restrooms, elevators, stairs and entrances</h3><ul><li>' ) && false !== strpos( $h5, '<strong>Main Entrance</strong>' ) && false !== strpos( $h5, '>Main Entrance</text>' ), 'entrances are listed with restrooms, elevators and stairs, named on the map' );
+ok( false !== strpos( $h5, '<h3>Restrooms, elevators and entrances</h3><ul><li>' ) && false !== strpos( $h5, '<strong>Main Entrance</strong>' ) && false !== strpos( $h5, '>Main Entrance</text>' ), 'entrances are listed with restrooms and elevators, named on the map' );
 ok( false !== strpos( $h5, '<h3>Emergency: exits, rescue areas and kits</h3>' ) && false !== strpos( $h5, '<strong>North stairwell door</strong>. Alarmed' ) && false === strpos( $h5, '>North stairwell door</text>' ), 'emergency exits are listed under Emergency, symbol only on the map' );
 ok( false !== strpos( $h5, '<span>Entrance and exit</span>' ) && false !== strpos( $h5, '<span>Emergency exit</span>' ), 'both are in the key' );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't8', 'name' => 'Public computers', 'type' => 'computers', 'note' => '', 'x' => 70, 'y' => 70 );
@@ -256,8 +257,8 @@ ok( false !== strpos( $h6, '<span class="wpfloors-sr">Computers: </span><strong>
 ok( false !== strpos( $h4, '<span class="wpfloors-sr">Studio: </span><strong>Podcast Studio</strong>' ) && false !== strpos( $h4, '>Podcast Studio</text>' ) && false !== strpos( $h4, 'M-.62-.9H1.28L.62 .9H-1.28Z' ), 'studio: listed, named on the map, its own shape' );
 
 ok( 1 === substr_count( $html, 'class="nm end"' ), 'names near the right edge are anchored at the end' );
-ok( false === strpos( $html, '>East stairs</text>' ) && false === strpos( $html, '>Elevator</text>' ) && false !== strpos( $html, '>Reference Desk</text>' ), 'stairs and elevator show only their symbol by default; rooms show their name' );
-ok( false !== strpos( $html, '<span class="wpfloors-sr">Stairs: </span><strong>East stairs</strong>' ) && false !== strpos( $html, '<span class="wpfloors-sr">Elevator: </span><strong>Elevator</strong>' ), 'hidden names still appear in the list' );
+ok( false === strpos( $html, '>East restroom</text>' ) && false === strpos( $html, '>Elevator</text>' ) && false !== strpos( $html, '>Reference Desk</text>' ), 'restrooms and elevators show only their symbol by default; rooms show their name' );
+ok( false !== strpos( $html, '<span class="wpfloors-sr">Restroom: </span><strong>East restroom</strong>' ) && false !== strpos( $html, '<span class="wpfloors-sr">Elevator: </span><strong>Elevator</strong>' ), 'hidden names still appear in the list' );
 ok( false !== strpos( $html, '<image href="https://example.test/up/third.svg" x="0" y="0" width="1200" height="800"/>' ), 'each floor draws its own SVG' );
 ok( false !== strpos( $html, 'translate(600 400) scale(24)' ) && false !== strpos( $html, 'translate(480 240) scale(24)' ), 'markers placed by percent of the map' );
 ok( 1 === substr_count( $html, 'The map for this floor isn&#8217;t available yet.' ) && false !== strpos( $html, '<strong>Annex desk</strong>' ), 'floor with a missing image still lists its labels' );

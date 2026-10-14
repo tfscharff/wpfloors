@@ -2,7 +2,7 @@
 
 A WordPress plugin that shows accessible floor maps of a library or any building. Staff upload an
 SVG map for each floor and add every label (rooms, services, collections, restrooms, elevators,
-stairs, exits, emergency rescue areas and kits) in wp-admin, without touching code.
+entrances, exits, emergency rescue areas and kits) in wp-admin, without touching code.
 
 - **wp-admin → Floor Maps → Floors**: add, rename, reorder and delete floors, and choose each
   floor's SVG map from the Media Library.
@@ -16,7 +16,7 @@ also appears in the text list.
 
 ## Status
 
-2.10.1 is the current release. A fresh install has no floors and no maps.
+2.11.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -36,7 +36,7 @@ also appears in the text list.
 - Nothing changes on the website until you click **Save**.
 - **Show name on the map:** each label has this checkbox. It's on by default for rooms, services,
   studios, collections and entrances, and off for printers, checkouts, computers, restrooms,
-  elevators, stairs, emergency exits, rescue areas and kits, whose symbol says what they are. Turn
+  elevators, emergency exits, rescue areas and kits, whose symbol says what they are. Turn
   it off wherever names would overlap. Every name is always in the list under the map.
 - Deleting a floor deletes its labels when you click Save. Reload the page before saving to undo.
 - To place a label without a mouse, use **Add a label by typing its position** (or **Edit**) and type the position in
@@ -64,6 +64,12 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.11.0 (2026-10-14)
+
+- Removed the **Stairs** label type. Any stairs labels no longer show, and are deleted the next
+  time the floor is saved.
+- "Restrooms, elevators, stairs and entrances" is now "Restrooms, elevators and entrances".
 
 ### 2.10.1 (2026-10-14)
 
