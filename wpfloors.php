@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Floor Maps
  * Description:       Accessible floor maps for a library or any building. Staff upload an SVG map for each floor and add every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
- * Version:           2.22.0
+ * Version:           2.23.0
  * Author:            Madeleine Clark Wallace Library
  * License:           GPL-2.0+
  * Requires at least: 5.6
@@ -26,8 +26,8 @@ define( 'WPFLOORS_MAX_SVG_BYTES', 5 * 1024 * 1024 );
  * (https://fontawesome.com, icons licensed CC BY 4.0, Copyright 2024 Fonticons, Inc.): [width,
  * height, path]. Every icon is drawn 1.5 units tall, 1.5 times the name text. name_on_map is the default for a label's "Show name on the map" checkbox: the icon
  * alone says what a restroom or an exit is, but not which room or service is which.
- * chars names the form field for up to 5 characters that replace the icon (wpfloors_chars()):
- * an office's number, or a collection's call number letters. Office has no icon, so it shows "#" without.
+ * chars names the form field for up to 5 characters that replace the icon (see wpfloors_marker()):
+ * an office's number, or a collection's call number letters. Without them, the type's icon shows.
  */
 function wpfloors_types() {
 	return array(
@@ -37,7 +37,7 @@ function wpfloors_types() {
 		'studio'     => array( 'label' => 'Studio',                'group' => 'rooms', 'name_on_map' => true,        'icon' => array( 512, 512, 'M256 80C149.9 80 62.4 159.4 49.6 262c9.4-3.8 19.6-6 30.4-6c26.5 0 48 21.5 48 48l0 128c0 26.5-21.5 48-48 48c-44.2 0-80-35.8-80-80l0-16 0-48 0-48C0 146.6 114.6 32 256 32s256 114.6 256 256l0 48 0 48 0 16c0 44.2-35.8 80-80 80c-26.5 0-48-21.5-48-48l0-128c0-26.5 21.5-48 48-48c10.8 0 21 2.1 30.4 6C449.6 159.4 362.1 80 256 80z' ) ),
 		'checkout'   => array( 'label' => 'Checkout',              'group' => 'rooms', 'name_on_map' => false,       'icon' => array( 512, 512, 'M24 32C10.7 32 0 42.7 0 56L0 456c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24L64 56c0-13.3-10.7-24-24-24L24 32zm88 0c-8.8 0-16 7.2-16 16l0 416c0 8.8 7.2 16 16 16s16-7.2 16-16l0-416c0-8.8-7.2-16-16-16zm72 0c-13.3 0-24 10.7-24 24l0 400c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24l0-400c0-13.3-10.7-24-24-24l-16 0zm96 0c-13.3 0-24 10.7-24 24l0 400c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24l0-400c0-13.3-10.7-24-24-24l-16 0zM448 56l0 400c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24l0-400c0-13.3-10.7-24-24-24l-16 0c-13.3 0-24 10.7-24 24zm-64-8l0 416c0 8.8 7.2 16 16 16s16-7.2 16-16l0-416c0-8.8-7.2-16-16-16s-16 7.2-16 16z' ) ),
 		'computers'  => array( 'label' => 'Computers',             'group' => 'rooms', 'name_on_map' => false,       'icon' => array( 640, 512, 'M384 96l0 224L64 320 64 96l320 0zM64 32C28.7 32 0 60.7 0 96L0 320c0 35.3 28.7 64 64 64l117.3 0-10.7 32L96 416c-17.7 0-32 14.3-32 32s14.3 32 32 32l256 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-74.7 0-10.7-32L384 384c35.3 0 64-28.7 64-64l0-224c0-35.3-28.7-64-64-64L64 32zm464 0c-26.5 0-48 21.5-48 48l0 352c0 26.5 21.5 48 48 48l64 0c26.5 0 48-21.5 48-48l0-352c0-26.5-21.5-48-48-48l-64 0zm16 64l32 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16s7.2-16 16-16zm-16 80c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16zm32 160a32 32 0 1 1 0 64 32 32 0 1 1 0-64z' ) ),
-		'office'     => array( 'label' => 'Office',                'group' => 'rooms', 'name_on_map' => true,        'chars' => 'Office number', 'icon' => null ),
+		'office'     => array( 'label' => 'Office',                'group' => 'rooms', 'name_on_map' => true,        'chars' => 'Office number', 'icon' => array( 448, 512, 'M181.3 32.4c17.4 2.9 29.2 19.4 26.3 36.8L197.8 128l95.1 0 11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3s29.2 19.4 26.3 36.8L357.8 128l58.2 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-68.9 0L325.8 320l58.2 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-68.9 0-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8l9.8-58.7-95.1 0-11.5 69.3c-2.9 17.4-19.4 29.2-36.8 26.3s-29.2-19.4-26.3-36.8L90.2 384 32 384c-17.7 0-32-14.3-32-32s14.3-32 32-32l68.9 0 21.3-128L64 192c-17.7 0-32-14.3-32-32s14.3-32 32-32l68.9 0 11.5-69.3c2.9-17.4 19.4-29.2 36.8-26.3zM187.1 192L165.8 320l95.1 0 21.3-128-95.1 0z' ) ),
 		'collection' => array( 'label' => 'Collection',            'group' => 'collections', 'name_on_map' => true,  'chars' => 'Characters', 'icon' => array( 448, 512, 'M96 0C43 0 0 43 0 96L0 416c0 53 43 96 96 96l288 0 32 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l0-64c17.7 0 32-14.3 32-32l0-320c0-17.7-14.3-32-32-32L384 0 96 0zm0 384l256 0 0 64L96 448c-17.7 0-32-14.3-32-32s14.3-32 32-32zm32-240c0-8.8 7.2-16 16-16l192 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-192 0c-8.8 0-16-7.2-16-16zm16 48l192 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-192 0c-8.8 0-16-7.2-16-16s7.2-16 16-16z' ) ),
 		'restroom'   => array( 'label' => 'Restroom',              'group' => 'facilities', 'name_on_map' => false,  'icon' => array( 448, 512, 'M24 0C10.7 0 0 10.7 0 24S10.7 48 24 48l8 0 0 148.9c-1.9 1.4-3.8 2.9-5.6 4.4C10.9 214.5 0 232.9 0 256c0 46.9 14.3 84.1 37 112.5c14.2 17.7 31.1 31.3 48.5 41.8L65.6 469.9c-3.3 9.8-1.6 20.5 4.4 28.8s15.7 13.3 26 13.3l256 0c10.3 0 19.9-4.9 26-13.3s7.7-19.1 4.4-28.8l-19.8-59.5c17.4-10.5 34.3-24.1 48.5-41.8c22.7-28.4 37-65.5 37-112.5c0-23.1-10.9-41.5-26.4-54.6c-1.8-1.5-3.7-3-5.6-4.4L416 48l8 0c13.3 0 24-10.7 24-24s-10.7-24-24-24L24 0zM384 256.3c0 1-.3 2.6-3.8 5.6c-4.8 4.1-14 9-29.3 13.4C320.5 284 276.1 288 224 288s-96.5-4-126.9-12.8c-15.3-4.4-24.5-9.3-29.3-13.4c-3.5-3-3.8-4.6-3.8-5.6l0-.3c0 0 0-.1 0-.1c0-1 0-2.5 3.8-5.8c4.8-4.1 14-9 29.3-13.4C127.5 228 171.9 224 224 224s96.5 4 126.9 12.8c15.3 4.4 24.5 9.3 29.3 13.4c3.8 3.2 3.8 4.8 3.8 5.8c0 0 0 .1 0 .1l0 .3zM328.2 384l-.2 .5 0-.5 .2 0zM112 64l32 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16s7.2-16 16-16z' ) ),
 		'elevator'   => array( 'label' => 'Elevator',              'group' => 'facilities', 'name_on_map' => false,  'icon' => array( 512, 512, 'M132.7 4.7l-64 64c-4.6 4.6-5.9 11.5-3.5 17.4s8.3 9.9 14.8 9.9l128 0c6.5 0 12.3-3.9 14.8-9.9s1.1-12.9-3.5-17.4l-64-64c-6.2-6.2-16.4-6.2-22.6 0zM64 128c-35.3 0-64 28.7-64 64L0 448c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64L64 128zm96 96a48 48 0 1 1 0 96 48 48 0 1 1 0-96zM80 400c0-26.5 21.5-48 48-48l64 0c26.5 0 48 21.5 48 48l0 16c0 17.7-14.3 32-32 32l-96 0c-17.7 0-32-14.3-32-32l0-16zm192 0c0-26.5 21.5-48 48-48l64 0c26.5 0 48 21.5 48 48l0 16c0 17.7-14.3 32-32 32l-96 0c-17.7 0-32-14.3-32-32l0-16zm32-128a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zM356.7 91.3c6.2 6.2 16.4 6.2 22.6 0l64-64c4.6-4.6 5.9-11.5 3.5-17.4S438.5 0 432 0L304 0c-6.5 0-12.3 3.9-14.8 9.9s-1.1 12.9 3.5 17.4l64 64z' ) ),
@@ -336,11 +336,6 @@ function wpfloors_icon_path( $t ) {
 	return '<path class="ic" transform="translate(' . round( $x, 4 ) . ' ' . round( $y, 4 ) . ') scale(' . round( $k, 6 ) . ')" stroke-width="' . round( 0.3 / $k, 1 ) . '" d="' . esc_attr( $t['icon'][2] ) . '"/>';
 }
 
-/** The characters a label shows in place of an icon: its own, or "#" for an office with none. */
-function wpfloors_chars( $number ) {
-	return '' === $number ? '#' : $number;
-}
-
 /**
  * About how wide characters are at name size (1 unit): a bold digit is about 0.6 units, M and W
  * about 1, a hyphen 0.4 and other letters 0.75. Used to keep the name clear of long characters.
@@ -363,7 +358,7 @@ function wpfloors_marker( $lb, $vb ) {
 	$cx    = $vb[0] + $lb['x'] / 100 * $vb[2];
 	$cy    = $vb[1] + $lb['y'] / 100 * $vb[3];
 	$icon  = ! isset( $lb['show_icon'] ) || $lb['show_icon'];
-	$chars = '' !== $lb['number'] || empty( $t['icon'] ) ? wpfloors_chars( $lb['number'] ) : '';
+	$chars = $lb['number']; // An office's or collection's characters, shown in place of its icon.
 	// Name placement in marker units: [x, y, class]; y is the text baseline. An icon is 1.5 units
 	// tall. Characters are name size, so a name beside them clears their width and one above or
 	// below sits closer.
@@ -389,8 +384,8 @@ function wpfloors_marker( $lb, $vb ) {
 function wpfloors_icon( $type, $number = '' ) {
 	$t = wpfloors_types();
 	$t = $t[ $type ];
-	if ( '' !== $number || empty( $t['icon'] ) ) {
-		return '<span class="wpfloors-chars" aria-hidden="true">' . esc_html( wpfloors_chars( $number ) ) . '</span>';
+	if ( '' !== $number ) {
+		return '<span class="wpfloors-chars" aria-hidden="true">' . esc_html( $number ) . '</span>';
 	}
 	return '<svg class="wpfloors-svg wpfloors-icon" viewBox="-1.25 -1.25 2.5 2.5" aria-hidden="true" focusable="false"><g class="mk">'
 		. wpfloors_icon_path( $t ) . '</g></svg>';
@@ -826,7 +821,7 @@ function marker(lb,cls){
   var r=Math.max(vb[2],vb[3])*0.02,cx=vb[0]+lb.x/100*vb[2],cy=vb[1]+lb.y/100*vb[3];
   var g=svgEl("g",{"class":"mk"+(cls?" "+cls:""),transform:"translate("+num(cx)+" "+num(cy)+") scale("+num(r)+")"});
   /* With both turned off, the editor still shows a faint icon so the label can be found; the public map shows nothing. */
-  var chars=lb.number||(t.icon?"":"#"),w=0;chars.split("").forEach(function(c){w+=c==="-"?0.4:(/[0-9]/.test(c)?0.6:(/[MWmw]/.test(c)?1:0.75));});
+  var chars=lb.number||"",w=0;chars.split("").forEach(function(c){w+=c==="-"?0.4:(/[0-9]/.test(c)?0.6:(/[MWmw]/.test(c)?1:0.75));});
   var side=chars?Math.max(1.3,Math.round((w/2+0.35)*100)/100):1.3;
   var showIcon=lb.show_icon!==false,ghost=!showIcon&&!lb.show,ic=showIcon||ghost?(ghost?" off":""):null;
   if(ic===null){}

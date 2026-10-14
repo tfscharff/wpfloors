@@ -17,7 +17,7 @@ also appears in the text list.
 
 ## Status
 
-2.22.0 is the current release. A fresh install has no floors and no maps.
+2.23.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -65,6 +65,12 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.23.0 (2026-10-14)
+
+- **Office** has an icon now: Font Awesome's hashtag. It's Office's symbol in the key, and an office
+  with no number shows it on the map and in the list (in place of a typed "#"). Offices with a
+  number still show their number.
 
 ### 2.22.0 (2026-10-14)
 
