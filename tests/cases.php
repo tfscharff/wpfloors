@@ -246,7 +246,8 @@ ok( false !== strpos( $h4, '<span class="wpfloors-sr">Checkout: </span><strong>S
 ok( array() === labs( array( lbl( array( 'type' => 'text' ) ) ) ), 'the removed Text only type is no longer accepted' );
 ok( array() === labs( array( lbl( array( 'type' => 'stairs' ) ) ) ), 'the removed Stairs type is no longer accepted' );
 ok( '2M201' === labs( array( lbl( array( 'type' => 'office', 'number' => ' 2M-201<b>9' ) ) ) )[0]['number'], 'office number keeps letters and digits, at most 5' );
-ok( '' === labs( array( lbl( array( 'type' => 'room', 'number' => '214' ) ) ) )[0]['number'], 'only offices have a number' );
+ok( '' === labs( array( lbl( array( 'type' => 'room', 'number' => '214' ) ) ) )[0]['number'], 'only offices and collections have characters' );
+ok( 'ND' === labs( array( lbl( array( 'type' => 'collection', 'number' => 'N.D.' ) ) ) )[0]['number'], 'a collection keeps its characters' );
 ok( '' === labs( array( lbl( array( 'type' => 'office', 'number' => array( 1 ) ) ) ) )[0]['number'], 'junk office number is dropped' );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't9', 'name' => "Dean's office", 'type' => 'office', 'number' => '2M201', 'note' => '', 'x' => 30, 'y' => 30 );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't10', 'name' => 'Office 7', 'type' => 'office', 'number' => '7', 'note' => '', 'x' => 35, 'y' => 30 );
@@ -255,6 +256,15 @@ ok( false !== strpos( $h7, '<text class="no" x="0" y="0.243" font-size="0.676">2
 ok( false !== strpos( $h7, '<text class="no" x="0" y="0.36" font-size="1">7</text>' ), 'a short number is full size' );
 ok( false !== strpos( $h7, '<span class="wpfloors-sr">Office 2M201: </span><strong>Dean&#039;s office</strong>' ), 'screen readers hear the office number' );
 ok( false !== strpos( $h7, '<text class="no" x="0" y="0.36" font-size="1">#</text></g></svg><span>Office</span>' ), 'office: in the key as #' );
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't11', 'name' => 'Fine arts', 'type' => 'collection', 'number' => 'ND', 'note' => '', 'x' => 40, 'y' => 60 );
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't12', 'name' => 'New books', 'type' => 'collection', 'note' => '', 'x' => 45, 'y' => 60 );
+$h8  = wpfloors_shortcode();
+$nd  = substr( $h8, strpos( $h8, '<span class="wpfloors-sr">Collection ND: </span><strong>Fine arts</strong>' ) - 300, 300 );
+$nb  = substr( $h8, 0, strpos( $h8, '<strong>New books</strong>' ) );
+$nb  = substr( $nb, strrpos( $nb, '<li>' ) );
+ok( false !== strpos( $nd, '>ND</text>' ) && false === strpos( $nd, 'class="ic"' ), 'a collection with characters shows them in place of the book, and screen readers hear them' );
+ok( false !== strpos( $nb, 'class="ic"' ) && false === strpos( $nb, 'class="no"' ), 'a collection without characters keeps the book icon' );
+ok( false !== strpos( $h8, '>ND</text><text class="nm"' ), 'on the map too, the characters replace the icon' );
 ok( false === strpos( $h7, 'class="sh"' ) && false !== strpos( $h7, 'stroke-width="76.8"' ), 'no marker shapes; icons get a white outline' );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't6', 'name' => 'Main Entrance', 'type' => 'exit', 'note' => '', 'x' => 60, 'y' => 90 );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't7', 'name' => 'North stairwell door', 'type' => 'emergency-exit', 'note' => 'Alarmed', 'x' => 10, 'y' => 10 );

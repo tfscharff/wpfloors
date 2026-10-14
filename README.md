@@ -11,12 +11,13 @@ entrances, exits, emergency rescue areas and kits) in wp-admin, without touching
 - **`[floor_maps]`**: put this shortcode on a page to show every floor. Each floor shows the map
   with its labels, followed by the same information as a text list.
 
-Color never carries meaning. Each type of label has its own icon (offices show their number), and every label
+Color never carries meaning. Each type of label has its own icon (offices and collections can show up to 5 characters instead),
+and every label
 also appears in the text list.
 
 ## Status
 
-2.13.0 is the current release. A fresh install has no floors and no maps.
+2.14.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -64,6 +65,13 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.14.0 (2026-10-14)
+
+- **Collections** can show up to 5 letters and digits, e.g. a call number range like "ND", in place
+  of the book icon, the same way offices show their number. Choose Collection as the type and fill
+  in **Characters**. A collection with none keeps the book icon. Screen readers hear them in the
+  list ("Collection ND").
 
 ### 2.13.0 (2026-10-14)
 

@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Floor Maps
  * Description:       Accessible floor maps for a library or any building. Staff upload an SVG map for each floor and add every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
- * Version:           2.13.0
+ * Version:           2.14.0
  * Author:            Madeleine Clark Wallace Library
  * License:           GPL-2.0+
  * Requires at least: 5.6
@@ -26,7 +26,8 @@ define( 'WPFLOORS_MAX_SVG_BYTES', 5 * 1024 * 1024 );
  * (https://fontawesome.com, icons licensed CC BY 4.0, Copyright 2024 Fonticons, Inc.): [width,
  * height, path]. name_on_map is the default for a label's "Show name on the map" checkbox: the icon
  * alone says what a restroom or an exit is, but not which room or service is which.
- * Office has no icon: its marker is the label's office number (wpfloors_number_text()).
+ * chars names the form field for up to 5 characters that replace the icon (wpfloors_number_text()):
+ * an office's number, or a collection's call number letters. Office has no icon, so it shows "#" without.
  */
 function wpfloors_types() {
 	return array(
@@ -36,8 +37,8 @@ function wpfloors_types() {
 		'studio'     => array( 'label' => 'Studio',                'group' => 'rooms', 'name_on_map' => true,        'icon' => array( 512, 512, 'M256 80C149.9 80 62.4 159.4 49.6 262c9.4-3.8 19.6-6 30.4-6c26.5 0 48 21.5 48 48l0 128c0 26.5-21.5 48-48 48c-44.2 0-80-35.8-80-80l0-16 0-48 0-48C0 146.6 114.6 32 256 32s256 114.6 256 256l0 48 0 48 0 16c0 44.2-35.8 80-80 80c-26.5 0-48-21.5-48-48l0-128c0-26.5 21.5-48 48-48c10.8 0 21 2.1 30.4 6C449.6 159.4 362.1 80 256 80z' ) ),
 		'checkout'   => array( 'label' => 'Checkout',              'group' => 'rooms', 'name_on_map' => false,       'icon' => array( 512, 512, 'M24 32C10.7 32 0 42.7 0 56L0 456c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24L64 56c0-13.3-10.7-24-24-24L24 32zm88 0c-8.8 0-16 7.2-16 16l0 416c0 8.8 7.2 16 16 16s16-7.2 16-16l0-416c0-8.8-7.2-16-16-16zm72 0c-13.3 0-24 10.7-24 24l0 400c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24l0-400c0-13.3-10.7-24-24-24l-16 0zm96 0c-13.3 0-24 10.7-24 24l0 400c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24l0-400c0-13.3-10.7-24-24-24l-16 0zM448 56l0 400c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24l0-400c0-13.3-10.7-24-24-24l-16 0c-13.3 0-24 10.7-24 24zm-64-8l0 416c0 8.8 7.2 16 16 16s16-7.2 16-16l0-416c0-8.8-7.2-16-16-16s-16 7.2-16 16z' ) ),
 		'computers'  => array( 'label' => 'Computers',             'group' => 'rooms', 'name_on_map' => false,       'icon' => array( 640, 512, 'M384 96l0 224L64 320 64 96l320 0zM64 32C28.7 32 0 60.7 0 96L0 320c0 35.3 28.7 64 64 64l117.3 0-10.7 32L96 416c-17.7 0-32 14.3-32 32s14.3 32 32 32l256 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-74.7 0-10.7-32L384 384c35.3 0 64-28.7 64-64l0-224c0-35.3-28.7-64-64-64L64 32zm464 0c-26.5 0-48 21.5-48 48l0 352c0 26.5 21.5 48 48 48l64 0c26.5 0 48-21.5 48-48l0-352c0-26.5-21.5-48-48-48l-64 0zm16 64l32 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16s7.2-16 16-16zm-16 80c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16zm32 160a32 32 0 1 1 0 64 32 32 0 1 1 0-64z' ) ),
-		'office'     => array( 'label' => 'Office',                'group' => 'rooms', 'name_on_map' => true,        'icon' => null ),
-		'collection' => array( 'label' => 'Collection',            'group' => 'collections', 'name_on_map' => true,  'icon' => array( 448, 512, 'M96 0C43 0 0 43 0 96L0 416c0 53 43 96 96 96l288 0 32 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l0-64c17.7 0 32-14.3 32-32l0-320c0-17.7-14.3-32-32-32L384 0 96 0zm0 384l256 0 0 64L96 448c-17.7 0-32-14.3-32-32s14.3-32 32-32zm32-240c0-8.8 7.2-16 16-16l192 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-192 0c-8.8 0-16-7.2-16-16zm16 48l192 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-192 0c-8.8 0-16-7.2-16-16s7.2-16 16-16z' ) ),
+		'office'     => array( 'label' => 'Office',                'group' => 'rooms', 'name_on_map' => true,        'chars' => 'Office number', 'icon' => null ),
+		'collection' => array( 'label' => 'Collection',            'group' => 'collections', 'name_on_map' => true,  'chars' => 'Characters', 'icon' => array( 448, 512, 'M96 0C43 0 0 43 0 96L0 416c0 53 43 96 96 96l288 0 32 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l0-64c17.7 0 32-14.3 32-32l0-320c0-17.7-14.3-32-32-32L384 0 96 0zm0 384l256 0 0 64L96 448c-17.7 0-32-14.3-32-32s14.3-32 32-32zm32-240c0-8.8 7.2-16 16-16l192 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-192 0c-8.8 0-16-7.2-16-16zm16 48l192 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-192 0c-8.8 0-16-7.2-16-16s7.2-16 16-16z' ) ),
 		'restroom'   => array( 'label' => 'Restroom',              'group' => 'facilities', 'name_on_map' => false,  'icon' => array( 640, 512, 'M80 48a48 48 0 1 1 96 0A48 48 0 1 1 80 48zm40 304l0 128c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-154.8c-8.1 9.2-21.1 13.2-33.5 9.4c-16.9-5.3-26.3-23.2-21-40.1l30.9-99.1C44.9 155.3 82 128 124 128l8 0c42 0 79.1 27.3 91.6 67.4l30.9 99.1c5.3 16.9-4.1 34.8-21 40.1c-12.4 3.9-25.4-.2-33.5-9.4L200 480c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-128-16 0zM320 0c13.3 0 24 10.7 24 24l0 464c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-464c0-13.3 10.7-24 24-24zM464 48a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zM440 480l0-96-17.8 0c-10.9 0-18.6-10.7-15.2-21.1l9-26.9c-3.2 0-6.4-.5-9.5-1.5c-16.9-5.3-26.3-23.2-21-40.1l29.7-95.2C428.4 156.9 467.6 128 512 128s83.6 28.9 96.8 71.2l29.7 95.2c5.3 16.9-4.1 34.8-21 40.1c-3.2 1-6.4 1.5-9.5 1.5l9 26.9c3.5 10.4-4.3 21.1-15.2 21.1L584 384l0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-96-16 0 0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32z' ) ),
 		'elevator'   => array( 'label' => 'Elevator',              'group' => 'facilities', 'name_on_map' => false,  'icon' => array( 512, 512, 'M132.7 4.7l-64 64c-4.6 4.6-5.9 11.5-3.5 17.4s8.3 9.9 14.8 9.9l128 0c6.5 0 12.3-3.9 14.8-9.9s1.1-12.9-3.5-17.4l-64-64c-6.2-6.2-16.4-6.2-22.6 0zM64 128c-35.3 0-64 28.7-64 64L0 448c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64L64 128zm96 96a48 48 0 1 1 0 96 48 48 0 1 1 0-96zM80 400c0-26.5 21.5-48 48-48l64 0c26.5 0 48 21.5 48 48l0 16c0 17.7-14.3 32-32 32l-96 0c-17.7 0-32-14.3-32-32l0-16zm192 0c0-26.5 21.5-48 48-48l64 0c26.5 0 48 21.5 48 48l0 16c0 17.7-14.3 32-32 32l-96 0c-17.7 0-32-14.3-32-32l0-16zm32-128a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zM356.7 91.3c6.2 6.2 16.4 6.2 22.6 0l64-64c4.6-4.6 5.9-11.5 3.5-17.4S438.5 0 432 0L304 0c-6.5 0-12.3 3.9-14.8 9.9s-1.1 12.9 3.5 17.4l64 64z' ) ),
 		'exit'       => array( 'label' => 'Entrance and exit',     'group' => 'facilities', 'name_on_map' => true,   'icon' => array( 640, 512, 'M208 96a48 48 0 1 0 0-96 48 48 0 1 0 0 96zM123.7 200.5c1-.4 1.9-.8 2.9-1.2l-16.9 63.5c-5.6 21.1-.1 43.6 14.7 59.7l70.7 77.1 22 88.1c4.3 17.1 21.7 27.6 38.8 23.3s27.6-21.7 23.3-38.8l-23-92.1c-1.9-7.8-5.8-14.9-11.2-20.8l-49.5-54 19.3-65.5 9.6 23c4.4 10.6 12.5 19.3 22.8 24.5l26.7 13.3c15.8 7.9 35 1.5 42.9-14.3s1.5-35-14.3-42.9L281 232.7l-15.3-36.8C248.5 154.8 208.3 128 163.7 128c-22.8 0-45.3 4.8-66.1 14l-8 3.5c-32.9 14.6-58.1 42.4-69.4 76.5l-2.6 7.8c-5.6 16.8 3.5 34.9 20.2 40.5s34.9-3.5 40.5-20.2l2.6-7.8c5.7-17.1 18.3-30.9 34.7-38.2l8-3.5zm-30 135.1L68.7 398 9.4 457.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L116.3 441c4.6-4.6 8.2-10.1 10.6-16.1l14.5-36.2-40.7-44.4c-2.5-2.7-4.8-5.6-7-8.6zM550.6 153.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L530.7 224 384 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l146.7 0-25.4 25.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l80-80c12.5-12.5 12.5-32.8 0-45.3l-80-80z' ) ),
@@ -96,7 +97,7 @@ function wpfloors_show( $v, $default ) {
 	return (bool) $default;
 }
 
-/** An office number: up to 5 letters and digits, e.g. "214" or "2M201". */
+/** Characters shown in place of an icon: up to 5 letters and digits, e.g. "214", "2M201" or "ND". */
 function wpfloors_number( $v ) {
 	return is_scalar( $v ) && ! is_bool( $v ) ? substr( preg_replace( '/[^A-Za-z0-9]/', '', (string) $v ), 0, 5 ) : '';
 }
@@ -153,7 +154,7 @@ function wpfloors_sanitize( $in ) {
 				'name' => $name,
 				'type' => $type,
 				'note' => wpfloors_text( isset( $r['note'] ) ? $r['note'] : '', 300 ),
-				'number' => 'office' === $type ? wpfloors_number( isset( $r['number'] ) ? $r['number'] : '' ) : '',
+				'number' => ! empty( $types[ $type ]['chars'] ) ? wpfloors_number( isset( $r['number'] ) ? $r['number'] : '' ) : '',
 				'show' => wpfloors_show( isset( $r['show'] ) ? $r['show'] : null, $types[ $type ]['name_on_map'] ),
 				'x'    => $x,
 				'y'    => $y,
@@ -322,7 +323,7 @@ function wpfloors_icon_path( $t ) {
 }
 
 /**
- * An office's marker: its number, or "#" when it has none. The text shrinks to stay within 2.3
+ * Characters in place of an icon: an office's number ("#" when it has none) or a collection's letters. The text shrinks to stay within 2.3
  * units, about the width of an icon. At size 1 a bold digit is about 0.6 units wide, M and W about 1,
  * and other letters about 0.75: "214" is full size, "88888" about three-quarters, "WWWWW" under half.
  * The admin script uses the same formula.
@@ -337,7 +338,7 @@ function wpfloors_number_text( $number ) {
 	return '<text class="no" x="0" y="' . round( 0.36 * $f, 3 ) . '" font-size="' . $f . '">' . esc_html( $number ) . '</text>';
 }
 
-/** One label on the map: its icon (or office number) and name, in marker units (radius 1). */
+/** One label on the map: its icon (or its characters) and name, in marker units (radius 1). */
 function wpfloors_marker( $lb, $vb ) {
 	$types = wpfloors_types();
 	if ( ! isset( $types[ $lb['type'] ] ) ) { return ''; }
@@ -347,17 +348,17 @@ function wpfloors_marker( $lb, $vb ) {
 	$cy    = $vb[1] + $lb['y'] / 100 * $vb[3];
 	$right = $lb['x'] > 65; // Names near the right edge go on the left of the marker.
 	return '<g class="mk" transform="translate(' . wpfloors_num( $cx ) . ' ' . wpfloors_num( $cy ) . ') scale(' . wpfloors_num( $r ) . ')">'
-		. ( 'office' === $lb['type'] ? wpfloors_number_text( $lb['number'] ) : wpfloors_icon_path( $t ) )
+		. ( '' !== $lb['number'] || empty( $t['icon'] ) ? wpfloors_number_text( $lb['number'] ) : wpfloors_icon_path( $t ) )
 		. ( $lb['show'] ? '<text class="nm' . ( $right ? ' end' : '' ) . '" x="' . ( $right ? '-1.6' : '1.6' ) . '" y="0.36" font-size="1">' . esc_html( $lb['name'] ) . '</text>' : '' )
 		. '</g>';
 }
 
-/** A small marker icon for the key and the lists, with an office's number. Hidden from screen readers. */
+/** A small marker icon for the key and the lists, or the label's characters. Hidden from screen readers. */
 function wpfloors_icon( $type, $number = '' ) {
 	$t = wpfloors_types();
 	$t = $t[ $type ];
 	return '<svg class="wpfloors-svg wpfloors-icon" viewBox="-1.25 -1.25 2.5 2.5" aria-hidden="true" focusable="false"><g class="mk">'
-		. ( 'office' === $type ? wpfloors_number_text( $number ) : wpfloors_icon_path( $t ) ) . '</g></svg>';
+		. ( '' !== $number || empty( $t['icon'] ) ? wpfloors_number_text( $number ) : wpfloors_icon_path( $t ) ) . '</g></svg>';
 }
 
 /** A map as inline SVG, with its labels. $map comes from wpfloors_map(). */
@@ -448,9 +449,9 @@ function wpfloors_floor_body( $floor, $labels, $h, $full_url ) {
 		$out .= '<div class="wpfloors-group"><h' . $h . '>' . esc_html( $heading ) . '</h' . $h . '><ul>';
 		foreach ( $items as $lb ) {
 			$out .= '<li>' . wpfloors_icon( $lb['type'], $lb['number'] ) . '<span>';
-			// On screen the icon shows the type (the key spells them out) and an office's number. The
+			// On screen the icon shows the type (the key spells them out), or the label's characters. The
 			// icon is hidden from screen readers, so they hear these instead: "Restroom: East restroom",
-			// "Office 214: Dean's office".
+			// "Office 214: Dean's office", "Collection ND: Fine arts".
 			if ( count( $kinds ) > 1 || '' !== $lb['number'] ) {
 				$out .= '<span class="wpfloors-sr">' . esc_html( trim( $types[ $lb['type'] ]['label'] . ' ' . $lb['number'] ) ) . ': </span>';
 			}
@@ -620,8 +621,8 @@ function wpfloors_admin_markup() {
       <div class="row">
         <div><label for="wpfloors-name">Name</label><input id="wpfloors-name" type="text" maxlength="100" autocomplete="off"></div>
         <div><label for="wpfloors-type">Type</label><select id="wpfloors-type"></select></div>
-        <div id="wpfloors-number-row" hidden><label for="wpfloors-number">Office number</label><input id="wpfloors-number" type="text" maxlength="5" autocomplete="off" aria-describedby="wpfloors-number-hint">
-          <p class="hint" id="wpfloors-number-hint" style="margin:2px 0 0">Up to 5 letters and digits. It shows inside the marker.</p></div>
+        <div id="wpfloors-number-row" hidden><label for="wpfloors-number" id="wpfloors-number-label">Office number</label><input id="wpfloors-number" type="text" maxlength="5" autocomplete="off" aria-describedby="wpfloors-number-hint">
+          <p class="hint" id="wpfloors-number-hint" style="margin:2px 0 0">Up to 5 letters and digits, shown on the map in place of an icon.</p></div>
       </div>
       <div class="row">
         <div><label for="wpfloors-note">Note (optional)</label><input id="wpfloors-note" type="text" maxlength="300" autocomplete="off"></div>
@@ -779,7 +780,7 @@ function marker(lb,cls){
   var t=types[lb.type];if(!t)return null;
   var r=Math.max(vb[2],vb[3])*0.02,cx=vb[0]+lb.x/100*vb[2],cy=vb[1]+lb.y/100*vb[3],right=lb.x>65;
   var g=svgEl("g",{"class":"mk"+(cls?" "+cls:""),transform:"translate("+num(cx)+" "+num(cy)+") scale("+num(r)+")"});
-  if(t.icon){var k=2/Math.max(t.icon[0],t.icon[1]);g.appendChild(svgEl("path",{"class":"ic",transform:"translate("+(-t.icon[0]*k/2)+" "+(-t.icon[1]*k/2)+") scale("+k+")","stroke-width":Math.round(3/k)/10,d:t.icon[2]}));}
+  if(t.icon&&!lb.number){var k=2/Math.max(t.icon[0],t.icon[1]);g.appendChild(svgEl("path",{"class":"ic",transform:"translate("+(-t.icon[0]*k/2)+" "+(-t.icon[1]*k/2)+") scale("+k+")","stroke-width":Math.round(3/k)/10,d:t.icon[2]}));}
   else{var no=lb.number||"#",w=0;no.split("").forEach(function(c){w+=/[0-9]/.test(c)?0.6:(/[MWmw]/.test(c)?1:0.75);});var f=Math.round(Math.min(1,2.3/w)*1000)/1000,T=svgEl("text",{"class":"no",x:0,y:Math.round(0.36*f*1000)/1000,"font-size":f});T.textContent=no;g.appendChild(T);}
   if(lb.show){var N=svgEl("text",{"class":"nm"+(right?" end":""),x:right?-1.6:1.6,y:0.36,"font-size":1});N.textContent=lb.name;g.appendChild(N);}
   return g;
@@ -801,9 +802,9 @@ function pending(){
 }
 
 /* ---------- labels ---------- */
-/* Same rules as the PHP wpfloors_number(): only offices have a number. */
-function officeNumber(){return $("wpfloors-type").value==="office"?$("wpfloors-number").value.replace(/[^A-Za-z0-9]/g,"").slice(0,5):"";}
-function syncNumber(){$("wpfloors-number-row").hidden=$("wpfloors-type").value!=="office";}
+/* Same rules as the PHP wpfloors_number(): only types with chars (office, collection) have them. */
+function officeNumber(){var t=types[$("wpfloors-type").value];return t&&t.chars?$("wpfloors-number").value.replace(/[^A-Za-z0-9]/g,"").slice(0,5):"";}
+function syncNumber(){var t=types[$("wpfloors-type").value];$("wpfloors-number-row").hidden=!(t&&t.chars);if(t&&t.chars)$("wpfloors-number-label").textContent=t.chars;}
 function renderRows(){
   var tb=$("wpfloors-rows");tb.innerHTML="";
   var f=cur?floorOf(cur):null;
