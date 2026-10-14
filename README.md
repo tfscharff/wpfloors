@@ -17,7 +17,7 @@ also appears in the text list.
 
 ## Status
 
-2.21.0 is the current release. A fresh install has no floors and no maps.
+2.22.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -65,6 +65,12 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.22.0 (2026-10-14)
+
+- Map image URLs now end in `?v=` plus the file's last-modified time, so a map SVG replaced under
+  the same file name (for example over SFTP) shows up right away instead of staying cached for a
+  year. This applies to the public maps, the full-size map page and the editor.
 
 ### 2.21.0 (2026-10-14)
 

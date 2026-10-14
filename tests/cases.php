@@ -148,7 +148,10 @@ ok( 0 === $up( 'map.svg', $good )['error'], 'good SVG upload goes through untouc
 ok( is_string( $up( 'Map.SVG', $bad['onload'] )['error'] ), 'bad SVG upload refused with a message' );
 ok( is_string( $up( 'map.svgz', $good )['error'] ), '.svgz refused' );
 ok( 0 === $up( 'photo.jpg', 'whatever' )['error'], 'other uploads are not this plugin\'s business' );
-ok( array( 'url' => 'https://example.test/up/third.svg', 'w' => 1200.0, 'h' => 800.0 ) === wpfloors_image( 7 ), 'SVG attachment gives URL and size' );
+ok( array( 'url' => 'https://example.test/up/third.svg?v=1700000000', 'w' => 1200.0, 'h' => 800.0 ) === wpfloors_image( 7 ), 'SVG attachment gives URL and size; the URL carries the file time so an edited map is never stale' );
+touch( $GLOBALS['wpf_dir'] . '/third.svg', 1700000500 );
+ok( 'https://example.test/up/third.svg?v=1700000500' === wpfloors_image( 7 )['url'], 'replacing the file in place changes the URL' );
+touch( $GLOBALS['wpf_dir'] . '/third.svg', 1700000000 );
 ok( 300.0 === wpfloors_image( 8 )['w'], 'SVG sized by width and height works too' );
 ok( null === wpfloors_image( 9 ) && null === wpfloors_image( 10 ) && null === wpfloors_image( 99 ) && null === wpfloors_image( 0 ), 'no map from an unsized SVG, a PNG, a missing file or nothing' );
 
@@ -200,7 +203,7 @@ ok( false === strpos( $html, '<text' ) && false === strpos( $html, 'class="wpflo
 preg_match_all( '/\sid="([^"]+)"/', $html, $m );
 ok( count( $m[1] ) === count( array_unique( $m[1] ) ), 'no duplicate ids' );
 ok( strpos( $html, '>Main Level</h2>' ) < strpos( $html, '>Basement</h2>' ) && strpos( $html, '>Basement</h2>' ) < strpos( $html, '>Attic</h2>' ), 'floors in their saved order' );
-ok( false !== strpos( $html, 'viewBox="0 0 300 150"' ) && false !== strpos( $html, '<image href="https://example.test/up/sized.svg" x="0" y="0" width="300" height="150"/>' ), 'SVG drawn with <image> at its own size' );
+ok( false !== strpos( $html, 'viewBox="0 0 300 150"' ) && false !== strpos( $html, '<image href="https://example.test/up/sized.svg?v=1700000000" x="0" y="0" width="300" height="150"/>' ), 'SVG drawn with <image> at its own size' );
 
 $evil = '"><script>alert(1)</script>';
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ] = array(
@@ -304,7 +307,7 @@ $h9 = substr( $h9, 0, strpos( $h9, '</section>' ) );
 ok( false === strpos( $h9, '<span>Elevator</span>' ) && false !== strpos( $h9, '<span>Service</span>' ) && false !== strpos( $h9, '<strong>Lift</strong>' ), 'the key lists only icons shown on the map; the list still has every label' );
 ok( false === strpos( $html, '>East restroom</text>' ) && false === strpos( $html, '>Elevator</text>' ) && false !== strpos( $html, '>Reference Desk</text>' ), 'restrooms and elevators show only their symbol by default; rooms show their name' );
 ok( false !== strpos( $html, '<span class="wpfloors-sr">Restroom: </span><strong>East restroom</strong>' ) && false !== strpos( $html, '<span class="wpfloors-sr">Elevator: </span><strong>Elevator</strong>' ), 'hidden names still appear in the list' );
-ok( false !== strpos( $html, '<image href="https://example.test/up/third.svg" x="0" y="0" width="1200" height="800"/>' ), 'each floor draws its own SVG' );
+ok( false !== strpos( $html, '<image href="https://example.test/up/third.svg?v=1700000000" x="0" y="0" width="1200" height="800"/>' ), 'each floor draws its own SVG' );
 ok( false !== strpos( $html, 'translate(600 400) scale(24)' ) && false !== strpos( $html, 'translate(480 240) scale(24)' ), 'markers placed by percent of the map' );
 ok( 1 === substr_count( $html, 'The map for this floor isn&#8217;t available yet.' ) && false !== strpos( $html, '<strong>Annex desk</strong>' ), 'floor with a missing image still lists its labels' );
 ok( 3 === substr_count( $html, 'Open full-size map' ), 'no full-size link without a map' );

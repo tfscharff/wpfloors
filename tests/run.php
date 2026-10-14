@@ -36,7 +36,10 @@ function wp_json_encode( $v, $flags = 0 ) { return json_encode( $v, $flags ); }
 function wp_create_nonce() { return 'nonce123'; }
 function rest_url( $p ) { return 'https://example.test/wp-json/' . $p; }
 function home_url( $p = '' ) { return 'https://example.test' . $p; }
-function add_query_arg( $args, $url ) { return $url . '?' . http_build_query( $args ); }
+function add_query_arg( $args, $value = null, $url = null ) {
+	if ( ! is_array( $args ) ) { $args = array( $args => $value ); } else { $url = $value; }
+	return $url . ( false === strpos( $url, '?' ) ? '?' : '&' ) . http_build_query( $args );
+}
 function get_the_ID() { return 42; }
 function get_bloginfo( $k ) { return 'language' === $k ? 'en-US' : 'Wallace Library'; }
 // Fake Media Library: attachment ID => [mime, file]. SVG files are written to a temp folder.
@@ -46,6 +49,7 @@ file_put_contents( $GLOBALS['wpf_dir'] . '/third.svg', '<?xml version="1.0"?><sv
 file_put_contents( $GLOBALS['wpf_dir'] . '/sized.svg', '<svg xmlns="http://www.w3.org/2000/svg" width="300px" height="150"><path d="M0 0H10"/></svg>' );
 file_put_contents( $GLOBALS['wpf_dir'] . '/nosize.svg', '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0H10"/></svg>' );
 file_put_contents( $GLOBALS['wpf_dir'] . '/photo.png', 'PNG' );
+foreach ( array( 'third.svg', 'sized.svg', 'nosize.svg', 'photo.png' ) as $f ) { touch( $GLOBALS['wpf_dir'] . '/' . $f, 1700000000 ); }
 $GLOBALS['wpf_media'] = array(
 	7  => array( 'image/svg+xml', 'third.svg' ),
 	8  => array( 'image/svg+xml', 'sized.svg' ),

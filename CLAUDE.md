@@ -30,6 +30,8 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   `wpfloors_svg_problem()` refuses an upload, without changing it, if it contains scripts, event
   handlers, entities, external links or CSS that loads files, or has no viewBox or size.
 - Maps are drawn with SVG `<image>`, which never runs scripts, and the markers go on top.
+- Map URLs carry `?v=<filemtime>` (2.22.0, `wpfloors_image()`): uploads are cached for a year and
+  Cloudflare ignores no-cache, so a map edited in place would otherwise stay stale.
 - Tests: `php tests/run.php [preview-dir]`. The stubs are in `run.php` and the cases in
   `tests/cases.php`. With a folder, it writes preview pages you can screenshot with headless Chrome.
   Headless Chrome won't go below about 500px wide, so check 320px inside a 320px iframe.

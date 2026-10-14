@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Floor Maps
  * Description:       Accessible floor maps for a library or any building. Staff upload an SVG map for each floor and add every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
- * Version:           2.21.0
+ * Version:           2.22.0
  * Author:            Madeleine Clark Wallace Library
  * License:           GPL-2.0+
  * Requires at least: 5.6
@@ -231,6 +231,10 @@ function wpfloors_image( $id ) {
 	$size = wpfloors_svg_size( (string) file_get_contents( $file ) );
 	$url  = wp_get_attachment_url( $id );
 	if ( ! $size || ! $url ) { return null; }
+	// Uploads are cached for a year, so a map replaced under the same file name would stay stale.
+	// The file's modified time in the URL makes browsers and caches fetch the new one.
+	$time = @filemtime( $file ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+	if ( $time ) { $url = add_query_arg( 'v', $time, $url ); }
 	return array( 'url' => $url, 'w' => $size[0], 'h' => $size[1] );
 }
 
