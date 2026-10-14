@@ -17,7 +17,7 @@ also appears in the text list.
 
 ## Status
 
-2.16.0 is the current release. A fresh install has no floors and no maps.
+2.17.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -65,6 +65,12 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.17.0 (2026-10-14)
+
+- **Name position:** each label can put its name on the map to the right, left, top or bottom of
+  its icon. Labels saved before 2.17.0 keep their placement (left near the right edge, otherwise
+  right), and new labels start the same way. The labels table shows each name's position.
 
 ### 2.16.0 (2026-10-14)
 
