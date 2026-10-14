@@ -11,12 +11,12 @@ entrances, exits, emergency rescue areas and kits) in wp-admin, without touching
 - **`[floor_maps]`**: put this shortcode on a page to show every floor. Each floor shows the map
   with its labels, followed by the same information as a text list.
 
-Color never carries meaning. Each type of label has its own marker shape and icon, and every label
+Color never carries meaning. Each type of label has its own icon (offices show their number), and every label
 also appears in the text list.
 
 ## Status
 
-2.12.0 is the current release. A fresh install has no floors and no maps.
+2.13.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -64,6 +64,12 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.13.0 (2026-10-14)
+
+- Markers no longer have shapes around them: each label is just its icon, or for an office its
+  number, in black with a thin white outline so it stays readable over walls. Icons are a little
+  larger. An office with no number shows "#", which is also its symbol in the key.
 
 ### 2.12.0 (2026-10-14)
 

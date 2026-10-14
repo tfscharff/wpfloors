@@ -56,8 +56,8 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   - studio (added in 2.7.0; listed under "Rooms and services")
   - checkout (added in 2.8.0; listed under "Rooms and services")
   - computers (added in 2.10.0; listed under "Rooms and services")
-  - office (added in 2.12.0; listed under "Rooms and services"): a folder marker with no icon; the
-    label's `number` (up to 5 letters and digits, '' for other types) shows inside it, shrunk by
+  - office (added in 2.12.0; listed under "Rooms and services"): no icon; the marker is the
+    label's `number` (up to 5 letters and digits, '' for other types; "#" when empty), shrunk by
     `wpfloors_number_text()` to fit (digits 0.6, M/W 1, other letters 0.75 units at size 1)
   (A "text only" type was added in 2.7.0 and removed in 2.8.0 at the user's request.)
   - collection
@@ -108,8 +108,9 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   "Main Level floor map. Everything shown is listed below." The labels inside the SVG are hidden
   from screen readers so nothing is read twice. Add a code comment explaining why, so nobody "fixes"
   it later.
-- **Color never carries meaning.** That is a firm rule from the user. Each type gets its own marker
-  shape with an icon in it, in black on white. A short legend in text sits under each drawing. The
+- **Color never carries meaning.** That is a firm rule from the user. Each type gets its own icon, in
+  black with a white outline. Markers have no shapes around them (removed in 2.13.0 as too
+  cluttered; don't add them back). A short legend in text sits under each drawing. The
   icons are Font Awesome Free 6.7.2 solid (CC BY 4.0), embedded as path data in `wpfloors_types()`.
   Never load Font Awesome's CSS or JS, and keep the credit in README.
 - Labels are real SVG text, not images of text. They need at least 4.5:1 contrast, with a white

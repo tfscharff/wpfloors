@@ -234,15 +234,15 @@ ok( false !== strpos( $html, '<span class="wpfloors-sr">Restroom: </span><strong
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't2', 'name' => 'Help Desk', 'type' => 'service', 'note' => '', 'x' => 20, 'y' => 20 );
 $h2 = wpfloors_shortcode();
 ok( false !== strpos( $h2, '<span class="wpfloors-sr">Room: </span><strong>Study room</strong>' ) && false !== strpos( $h2, '<span class="wpfloors-sr">Service: </span><strong>Help Desk</strong>' ), 'rooms and services share a group and say which is which' );
-ok( false !== strpos( $h2, '>Help Desk</text>' ) && false !== strpos( $h2, 'M-1-1H1V.45L0 1.15L-1 .45Z' ), 'a service shows its name and its own badge shape' );
+ok( false !== strpos( $h2, '>Help Desk</text>' ), 'a service shows its name on the map' );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't3', 'name' => 'Color printer', 'type' => 'printer', 'note' => 'Pay at the desk', 'x' => 30, 'y' => 70 );
 $h3 = wpfloors_shortcode();
 ok( false !== strpos( $h3, '<span class="wpfloors-sr">Printer: </span><strong>Color printer</strong>. Pay at the desk' ) && false === strpos( $h3, '>Color printer</text>' ), 'a printer is listed under rooms and services, symbol only on the map by default' );
-ok( false !== strpos( $h3, 'M-.72-.95H.72L1.18 .95H-1.18Z' ) && false !== strpos( $h3, '<span>Printer</span>' ), 'printer has its own shape and is in the key' );
+ok( false !== strpos( $h3, '<span>Printer</span>' ), 'printer is in the key' );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't4', 'name' => 'Podcast Studio', 'type' => 'studio', 'note' => '', 'x' => 40, 'y' => 40 );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't5', 'name' => 'Self Checkout', 'type' => 'checkout', 'note' => '', 'x' => 50, 'y' => 20 );
 $h4 = wpfloors_shortcode();
-ok( false !== strpos( $h4, '<span class="wpfloors-sr">Checkout: </span><strong>Self Checkout</strong>' ) && false === strpos( $h4, '>Self Checkout</text>' ) && false !== strpos( $h4, 'M-1.3-.75H1.3V.75H-1.3Z' ) && false !== strpos( $h4, '<span>Checkout</span>' ), 'checkout: listed, symbol only on the map, its own shape, in the key' );
+ok( false !== strpos( $h4, '<span class="wpfloors-sr">Checkout: </span><strong>Self Checkout</strong>' ) && false === strpos( $h4, '>Self Checkout</text>' ) && false !== strpos( $h4, '<span>Checkout</span>' ), 'checkout: listed, symbol only on the map, in the key' );
 ok( array() === labs( array( lbl( array( 'type' => 'text' ) ) ) ), 'the removed Text only type is no longer accepted' );
 ok( array() === labs( array( lbl( array( 'type' => 'stairs' ) ) ) ), 'the removed Stairs type is no longer accepted' );
 ok( '2M201' === labs( array( lbl( array( 'type' => 'office', 'number' => ' 2M-201<b>9' ) ) ) )[0]['number'], 'office number keeps letters and digits, at most 5' );
@@ -251,10 +251,11 @@ ok( '' === labs( array( lbl( array( 'type' => 'office', 'number' => array( 1 ) )
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't9', 'name' => "Dean's office", 'type' => 'office', 'number' => '2M201', 'note' => '', 'x' => 30, 'y' => 30 );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't10', 'name' => 'Office 7', 'type' => 'office', 'number' => '7', 'note' => '', 'x' => 35, 'y' => 30 );
 $h7 = wpfloors_shortcode();
-ok( false !== strpos( $h7, '<text class="no" x="0" y="0.343" font-size="0.676">2M201</text>' ), 'a 5-character number shrinks to fit the folder' );
-ok( false !== strpos( $h7, '<text class="no" x="0" y="0.46" font-size="1">7</text>' ), 'a short number is full size' );
+ok( false !== strpos( $h7, '<text class="no" x="0" y="0.243" font-size="0.676">2M201</text>' ), 'a 5-character number shrinks to fit' );
+ok( false !== strpos( $h7, '<text class="no" x="0" y="0.36" font-size="1">7</text>' ), 'a short number is full size' );
 ok( false !== strpos( $h7, '<span class="wpfloors-sr">Office 2M201: </span><strong>Dean&#039;s office</strong>' ), 'screen readers hear the office number' );
-ok( false !== strpos( $h7, 'M-1.3-.95H-.35L-.15-.7H1.3V.9H-1.3Z' ) && false !== strpos( $h7, '<span>Office</span>' ), 'office: folder shape, in the key' );
+ok( false !== strpos( $h7, '<text class="no" x="0" y="0.36" font-size="1">#</text></g></svg><span>Office</span>' ), 'office: in the key as #' );
+ok( false === strpos( $h7, 'class="sh"' ) && false !== strpos( $h7, 'stroke-width="76.8"' ), 'no marker shapes; icons get a white outline' );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't6', 'name' => 'Main Entrance', 'type' => 'exit', 'note' => '', 'x' => 60, 'y' => 90 );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't7', 'name' => 'North stairwell door', 'type' => 'emergency-exit', 'note' => 'Alarmed', 'x' => 10, 'y' => 10 );
 $h5 = wpfloors_shortcode();
@@ -263,8 +264,8 @@ ok( false !== strpos( $h5, '<h3>Emergency: exits, rescue areas and kits</h3>' ) 
 ok( false !== strpos( $h5, '<span>Entrance and exit</span>' ) && false !== strpos( $h5, '<span>Emergency exit</span>' ), 'both are in the key' );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't8', 'name' => 'Public computers', 'type' => 'computers', 'note' => '', 'x' => 70, 'y' => 70 );
 $h6 = wpfloors_shortcode();
-ok( false !== strpos( $h6, '<span class="wpfloors-sr">Computers: </span><strong>Public computers</strong>' ) && false === strpos( $h6, '>Public computers</text>' ) && false !== strpos( $h6, 'M0-1.25L1.2-.3V1H-1.2V-.3Z' ) && false !== strpos( $h6, '<span>Computers</span>' ), 'computers: listed, symbol only on the map, its own shape, in the key' );
-ok( false !== strpos( $h4, '<span class="wpfloors-sr">Studio: </span><strong>Podcast Studio</strong>' ) && false !== strpos( $h4, '>Podcast Studio</text>' ) && false !== strpos( $h4, 'M-.62-.9H1.28L.62 .9H-1.28Z' ), 'studio: listed, named on the map, its own shape' );
+ok( false !== strpos( $h6, '<span class="wpfloors-sr">Computers: </span><strong>Public computers</strong>' ) && false === strpos( $h6, '>Public computers</text>' ) && false !== strpos( $h6, '<span>Computers</span>' ), 'computers: listed, symbol only on the map, in the key' );
+ok( false !== strpos( $h4, '<span class="wpfloors-sr">Studio: </span><strong>Podcast Studio</strong>' ) && false !== strpos( $h4, '>Podcast Studio</text>' ), 'studio: listed, named on the map' );
 
 ok( 1 === substr_count( $html, 'class="nm end"' ), 'names near the right edge are anchored at the end' );
 ok( false === strpos( $html, '>East restroom</text>' ) && false === strpos( $html, '>Elevator</text>' ) && false !== strpos( $html, '>Reference Desk</text>' ), 'restrooms and elevators show only their symbol by default; rooms show their name' );

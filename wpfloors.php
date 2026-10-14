@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Floor Maps
  * Description:       Accessible floor maps for a library or any building. Staff upload an SVG map for each floor and add every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
- * Version:           2.12.0
+ * Version:           2.13.0
  * Author:            Madeleine Clark Wallace Library
  * License:           GPL-2.0+
  * Requires at least: 5.6
@@ -21,29 +21,29 @@ define( 'WPFLOORS_MAX_SVG_BYTES', 5 * 1024 * 1024 );
  * ------------------------------------------------------------------ */
 
 /**
- * Label types. Color never carries meaning: each type has its own marker shape and icon,
- * drawn black on white. Icons are Font Awesome Free 6.7.2 solid (https://fontawesome.com,
- * icons licensed CC BY 4.0, Copyright 2024 Fonticons, Inc.): [width, height, path]. is is the icon's
- * height in marker units, and ix/iy move its center to sit inside the shape. name_on_map is the default for a label's "Show name on the map"
- * checkbox: the symbol alone says what a restroom or an exit is, but not which room or service is which. Shapes are SVG paths around (0,0) at radius ~1.
- * Office has no icon: its marker shows the label's office number instead (wpfloors_number_text()).
+ * Label types. Color never carries meaning: each type has its own icon, drawn black with a white
+ * outline so it stays readable over walls. Icons are Font Awesome Free 6.7.2 solid
+ * (https://fontawesome.com, icons licensed CC BY 4.0, Copyright 2024 Fonticons, Inc.): [width,
+ * height, path]. name_on_map is the default for a label's "Show name on the map" checkbox: the icon
+ * alone says what a restroom or an exit is, but not which room or service is which.
+ * Office has no icon: its marker is the label's office number (wpfloors_number_text()).
  */
 function wpfloors_types() {
 	return array(
-		'room'       => array( 'label' => 'Room',                  'group' => 'rooms', 'name_on_map' => true,        'icon' => array( 576, 512, 'M320 32c0-9.9-4.5-19.2-12.3-25.2S289.8-1.4 280.2 1l-179.9 45C79 51.3 64 70.5 64 92.5L64 448l-32 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 192 0 32 0 0-32 0-448zM256 256c0 17.7-10.7 32-24 32s-24-14.3-24-32s10.7-32 24-32s24 14.3 24 32zm96-128l96 0 0 352c0 17.7 14.3 32 32 32l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-32 0 0-320c0-35.3-28.7-64-64-64l-96 0 0 64z' ), 'is' => 1.05, 'ix' => 0, 'iy' => 0, 'shape' => 'M1 0A1 1 0 1 1-1 0A1 1 0 1 1 1 0Z' ),
-		'service'    => array( 'label' => 'Service',               'group' => 'rooms', 'name_on_map' => true,        'icon' => array( 512, 512, 'M216 64c-13.3 0-24 10.7-24 24s10.7 24 24 24l16 0 0 33.3C119.6 157.2 32 252.4 32 368l448 0c0-115.6-87.6-210.8-200-222.7l0-33.3 16 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-40 0-40 0zM24 400c-13.3 0-24 10.7-24 24s10.7 24 24 24l464 0c13.3 0 24-10.7 24-24s-10.7-24-24-24L24 400z' ), 'is' => 0.95, 'ix' => 0, 'iy' => -0.12, 'shape' => 'M-1-1H1V.45L0 1.15L-1 .45Z' ),
-		'printer'    => array( 'label' => 'Printer',               'group' => 'rooms', 'name_on_map' => false,       'icon' => array( 512, 512, 'M128 0C92.7 0 64 28.7 64 64l0 96 64 0 0-96 226.7 0L384 93.3l0 66.7 64 0 0-66.7c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0L128 0zM384 352l0 32 0 64-256 0 0-64 0-16 0-16 256 0zm64 32l32 0c17.7 0 32-14.3 32-32l0-96c0-35.3-28.7-64-64-64L64 192c-35.3 0-64 28.7-64 64l0 96c0 17.7 14.3 32 32 32l32 0 0 64c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-64zM432 248a24 24 0 1 1 0 48 24 24 0 1 1 0-48z' ), 'is' => 0.9, 'ix' => 0, 'iy' => 0.08, 'shape' => 'M-.72-.95H.72L1.18 .95H-1.18Z' ),
-		'studio'     => array( 'label' => 'Studio',                'group' => 'rooms', 'name_on_map' => true,        'icon' => array( 512, 512, 'M256 80C149.9 80 62.4 159.4 49.6 262c9.4-3.8 19.6-6 30.4-6c26.5 0 48 21.5 48 48l0 128c0 26.5-21.5 48-48 48c-44.2 0-80-35.8-80-80l0-16 0-48 0-48C0 146.6 114.6 32 256 32s256 114.6 256 256l0 48 0 48 0 16c0 44.2-35.8 80-80 80c-26.5 0-48-21.5-48-48l0-128c0-26.5 21.5-48 48-48c10.8 0 21 2.1 30.4 6C449.6 159.4 362.1 80 256 80z' ), 'is' => 0.95, 'ix' => 0, 'iy' => 0, 'shape' => 'M-.62-.9H1.28L.62 .9H-1.28Z' ),
-		'checkout'   => array( 'label' => 'Checkout',              'group' => 'rooms', 'name_on_map' => false,       'icon' => array( 512, 512, 'M24 32C10.7 32 0 42.7 0 56L0 456c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24L64 56c0-13.3-10.7-24-24-24L24 32zm88 0c-8.8 0-16 7.2-16 16l0 416c0 8.8 7.2 16 16 16s16-7.2 16-16l0-416c0-8.8-7.2-16-16-16zm72 0c-13.3 0-24 10.7-24 24l0 400c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24l0-400c0-13.3-10.7-24-24-24l-16 0zm96 0c-13.3 0-24 10.7-24 24l0 400c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24l0-400c0-13.3-10.7-24-24-24l-16 0zM448 56l0 400c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24l0-400c0-13.3-10.7-24-24-24l-16 0c-13.3 0-24 10.7-24 24zm-64-8l0 416c0 8.8 7.2 16 16 16s16-7.2 16-16l0-416c0-8.8-7.2-16-16-16s-16 7.2-16 16z' ), 'is' => 1.25, 'ix' => 0, 'iy' => 0, 'shape' => 'M-1.3-.75H1.3V.75H-1.3Z' ),
-		'computers'  => array( 'label' => 'Computers',             'group' => 'rooms', 'name_on_map' => false,       'icon' => array( 640, 512, 'M384 96l0 224L64 320 64 96l320 0zM64 32C28.7 32 0 60.7 0 96L0 320c0 35.3 28.7 64 64 64l117.3 0-10.7 32L96 416c-17.7 0-32 14.3-32 32s14.3 32 32 32l256 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-74.7 0-10.7-32L384 384c35.3 0 64-28.7 64-64l0-224c0-35.3-28.7-64-64-64L64 32zm464 0c-26.5 0-48 21.5-48 48l0 352c0 26.5 21.5 48 48 48l64 0c26.5 0 48-21.5 48-48l0-352c0-26.5-21.5-48-48-48l-64 0zm16 64l32 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16s7.2-16 16-16zm-16 80c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16zm32 160a32 32 0 1 1 0 64 32 32 0 1 1 0-64z' ), 'is' => 1.05, 'ix' => 0, 'iy' => 0.25, 'shape' => 'M0-1.25L1.2-.3V1H-1.2V-.3Z' ),
-		'office'     => array( 'label' => 'Office',                'group' => 'rooms', 'name_on_map' => true,        'icon' => null, 'shape' => 'M-1.3-.95H-.35L-.15-.7H1.3V.9H-1.3Z' ),
-		'collection' => array( 'label' => 'Collection',            'group' => 'collections', 'name_on_map' => true,  'icon' => array( 448, 512, 'M96 0C43 0 0 43 0 96L0 416c0 53 43 96 96 96l288 0 32 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l0-64c17.7 0 32-14.3 32-32l0-320c0-17.7-14.3-32-32-32L384 0 96 0zm0 384l256 0 0 64L96 448c-17.7 0-32-14.3-32-32s14.3-32 32-32zm32-240c0-8.8 7.2-16 16-16l192 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-192 0c-8.8 0-16-7.2-16-16zm16 48l192 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-192 0c-8.8 0-16-7.2-16-16s7.2-16 16-16z' ), 'is' => 1.05, 'ix' => 0, 'iy' => 0, 'shape' => 'M-.9-.9H.9V.9H-.9Z' ),
-		'restroom'   => array( 'label' => 'Restroom',              'group' => 'facilities', 'name_on_map' => false,  'icon' => array( 640, 512, 'M80 48a48 48 0 1 1 96 0A48 48 0 1 1 80 48zm40 304l0 128c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-154.8c-8.1 9.2-21.1 13.2-33.5 9.4c-16.9-5.3-26.3-23.2-21-40.1l30.9-99.1C44.9 155.3 82 128 124 128l8 0c42 0 79.1 27.3 91.6 67.4l30.9 99.1c5.3 16.9-4.1 34.8-21 40.1c-12.4 3.9-25.4-.2-33.5-9.4L200 480c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-128-16 0zM320 0c13.3 0 24 10.7 24 24l0 464c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-464c0-13.3 10.7-24 24-24zM464 48a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zM440 480l0-96-17.8 0c-10.9 0-18.6-10.7-15.2-21.1l9-26.9c-3.2 0-6.4-.5-9.5-1.5c-16.9-5.3-26.3-23.2-21-40.1l29.7-95.2C428.4 156.9 467.6 128 512 128s83.6 28.9 96.8 71.2l29.7 95.2c5.3 16.9-4.1 34.8-21 40.1c-3.2 1-6.4 1.5-9.5 1.5l9 26.9c3.5 10.4-4.3 21.1-15.2 21.1L584 384l0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-96-16 0 0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32z' ), 'is' => 1.0, 'ix' => 0, 'iy' => 0, 'shape' => 'M-.55-.85H.55A.85 .85 0 0 1 .55 .85H-.55A.85 .85 0 0 1-.55-.85Z' ),
-		'elevator'   => array( 'label' => 'Elevator',              'group' => 'facilities', 'name_on_map' => false,  'icon' => array( 512, 512, 'M132.7 4.7l-64 64c-4.6 4.6-5.9 11.5-3.5 17.4s8.3 9.9 14.8 9.9l128 0c6.5 0 12.3-3.9 14.8-9.9s1.1-12.9-3.5-17.4l-64-64c-6.2-6.2-16.4-6.2-22.6 0zM64 128c-35.3 0-64 28.7-64 64L0 448c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64L64 128zm96 96a48 48 0 1 1 0 96 48 48 0 1 1 0-96zM80 400c0-26.5 21.5-48 48-48l64 0c26.5 0 48 21.5 48 48l0 16c0 17.7-14.3 32-32 32l-96 0c-17.7 0-32-14.3-32-32l0-16zm192 0c0-26.5 21.5-48 48-48l64 0c26.5 0 48 21.5 48 48l0 16c0 17.7-14.3 32-32 32l-96 0c-17.7 0-32-14.3-32-32l0-16zm32-128a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zM356.7 91.3c6.2 6.2 16.4 6.2 22.6 0l64-64c4.6-4.6 5.9-11.5 3.5-17.4S438.5 0 432 0L304 0c-6.5 0-12.3 3.9-14.8 9.9s-1.1 12.9 3.5 17.4l64 64z' ), 'is' => 1.05, 'ix' => 0, 'iy' => 0, 'shape' => 'M1.1 0L.55 .95H-.55L-1.1 0L-.55-.95H.55Z' ),
-		'exit'       => array( 'label' => 'Entrance and exit',     'group' => 'facilities', 'name_on_map' => true,   'icon' => array( 640, 512, 'M208 96a48 48 0 1 0 0-96 48 48 0 1 0 0 96zM123.7 200.5c1-.4 1.9-.8 2.9-1.2l-16.9 63.5c-5.6 21.1-.1 43.6 14.7 59.7l70.7 77.1 22 88.1c4.3 17.1 21.7 27.6 38.8 23.3s27.6-21.7 23.3-38.8l-23-92.1c-1.9-7.8-5.8-14.9-11.2-20.8l-49.5-54 19.3-65.5 9.6 23c4.4 10.6 12.5 19.3 22.8 24.5l26.7 13.3c15.8 7.9 35 1.5 42.9-14.3s1.5-35-14.3-42.9L281 232.7l-15.3-36.8C248.5 154.8 208.3 128 163.7 128c-22.8 0-45.3 4.8-66.1 14l-8 3.5c-32.9 14.6-58.1 42.4-69.4 76.5l-2.6 7.8c-5.6 16.8 3.5 34.9 20.2 40.5s34.9-3.5 40.5-20.2l2.6-7.8c5.7-17.1 18.3-30.9 34.7-38.2l8-3.5zm-30 135.1L68.7 398 9.4 457.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L116.3 441c4.6-4.6 8.2-10.1 10.6-16.1l14.5-36.2-40.7-44.4c-2.5-2.7-4.8-5.6-7-8.6zM550.6 153.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L530.7 224 384 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l146.7 0-25.4 25.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l80-80c12.5-12.5 12.5-32.8 0-45.3l-80-80z' ), 'is' => 1.0, 'ix' => -0.1, 'iy' => 0, 'shape' => 'M-1.05-.85H.5L1.2 0L.5 .85H-1.05Z' ),
-		'emergency-exit' => array( 'label' => 'Emergency exit',    'group' => 'emergency', 'name_on_map' => false,   'icon' => array( 448, 512, 'M320 48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM125.7 175.5c9.9-9.9 23.4-15.5 37.5-15.5c1.9 0 3.8 .1 5.6 .3L137.6 254c-9.3 28 1.7 58.8 26.8 74.5l86.2 53.9-25.4 88.8c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l28.7-100.4c5.9-20.6-2.6-42.6-20.7-53.9L238 299l30.9-82.4 5.1 12.3C289 264.7 323.9 288 362.7 288l21.3 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-21.3 0c-12.9 0-24.6-7.8-29.5-19.7l-6.3-15c-14.6-35.1-44.1-61.9-80.5-73.1l-48.7-15c-11.1-3.4-22.7-5.2-34.4-5.2c-31 0-60.8 12.3-82.7 34.3L57.4 153.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l23.1-23.1zM91.2 352L32 352c-17.7 0-32 14.3-32 32s14.3 32 32 32l69.6 0c19 0 36.2-11.2 43.9-28.5L157 361.6l-9.5-6c-17.5-10.9-30.5-26.8-37.9-44.9L91.2 352z' ), 'is' => 1.15, 'ix' => 0, 'iy' => 0, 'shape' => 'M0.0-1.22L0.25-0.95L0.61-1.06L0.69-0.69L1.06-0.61L0.95-0.25L1.22 0.0L0.95 0.25L1.06 0.61L0.69 0.69L0.61 1.06L0.25 0.95L0.0 1.22L-0.25 0.95L-0.61 1.06L-0.69 0.69L-1.06 0.61L-0.95 0.25L-1.22 0.0L-0.95-0.25L-1.06-0.61L-0.69-0.69L-0.61-1.06L-0.25-0.95Z' ),
-		'rescue'     => array( 'label' => 'Emergency rescue area', 'group' => 'emergency', 'name_on_map' => false,   'icon' => array( 512, 512, 'M192 96a48 48 0 1 0 0-96 48 48 0 1 0 0 96zM120.5 247.2c12.4-4.7 18.7-18.5 14-30.9s-18.5-18.7-30.9-14C43.1 225.1 0 283.5 0 352c0 88.4 71.6 160 160 160c61.2 0 114.3-34.3 141.2-84.7c6.2-11.7 1.8-26.2-9.9-32.5s-26.2-1.8-32.5 9.9C240 440 202.8 464 160 464C98.1 464 48 413.9 48 352c0-47.9 30.1-88.8 72.5-104.8zM259.8 176l-1.9-9.7c-4.5-22.3-24-38.3-46.8-38.3c-30.1 0-52.7 27.5-46.8 57l23.1 115.5c6 29.9 32.2 51.4 62.8 51.4l5.1 0c.4 0 .8 0 1.3 0l94.1 0c6.7 0 12.6 4.1 15 10.4L402 459.2c6 16.1 23.8 24.6 40.1 19.1l48-16c16.8-5.6 25.8-23.7 20.2-40.5s-23.7-25.8-40.5-20.2l-18.7 6.2-25.5-68c-11.7-31.2-41.6-51.9-74.9-51.9l-68.5 0-9.6-48 63.4 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-76.2 0z' ), 'is' => 1.1, 'ix' => 0, 'iy' => 0, 'shape' => 'M-.45-1.05H.45L1.05-.45V.45L.45 1.05H-.45L-1.05 .45V-.45Z' ),
-		'kit'        => array( 'label' => 'Emergency kit',         'group' => 'emergency', 'name_on_map' => false,   'icon' => array( 576, 512, 'M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l32 0L96 32 64 32zm64 0l0 448 320 0 0-448L128 32zM512 480c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64l-32 0 0 448 32 0zM256 176c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16l0 48 48 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-48 0 0 48c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-48-48 0c-8.8 0-16-7.2-16-16l0-32c0-8.8 7.2-16 16-16l48 0 0-48z' ), 'is' => 0.95, 'ix' => 0, 'iy' => 0, 'shape' => 'M0-1.2L1.2 0L0 1.2L-1.2 0Z' ),
+		'room'       => array( 'label' => 'Room',                  'group' => 'rooms', 'name_on_map' => true,        'icon' => array( 576, 512, 'M320 32c0-9.9-4.5-19.2-12.3-25.2S289.8-1.4 280.2 1l-179.9 45C79 51.3 64 70.5 64 92.5L64 448l-32 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 192 0 32 0 0-32 0-448zM256 256c0 17.7-10.7 32-24 32s-24-14.3-24-32s10.7-32 24-32s24 14.3 24 32zm96-128l96 0 0 352c0 17.7 14.3 32 32 32l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-32 0 0-320c0-35.3-28.7-64-64-64l-96 0 0 64z' ) ),
+		'service'    => array( 'label' => 'Service',               'group' => 'rooms', 'name_on_map' => true,        'icon' => array( 512, 512, 'M216 64c-13.3 0-24 10.7-24 24s10.7 24 24 24l16 0 0 33.3C119.6 157.2 32 252.4 32 368l448 0c0-115.6-87.6-210.8-200-222.7l0-33.3 16 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-40 0-40 0zM24 400c-13.3 0-24 10.7-24 24s10.7 24 24 24l464 0c13.3 0 24-10.7 24-24s-10.7-24-24-24L24 400z' ) ),
+		'printer'    => array( 'label' => 'Printer',               'group' => 'rooms', 'name_on_map' => false,       'icon' => array( 512, 512, 'M128 0C92.7 0 64 28.7 64 64l0 96 64 0 0-96 226.7 0L384 93.3l0 66.7 64 0 0-66.7c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0L128 0zM384 352l0 32 0 64-256 0 0-64 0-16 0-16 256 0zm64 32l32 0c17.7 0 32-14.3 32-32l0-96c0-35.3-28.7-64-64-64L64 192c-35.3 0-64 28.7-64 64l0 96c0 17.7 14.3 32 32 32l32 0 0 64c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-64zM432 248a24 24 0 1 1 0 48 24 24 0 1 1 0-48z' ) ),
+		'studio'     => array( 'label' => 'Studio',                'group' => 'rooms', 'name_on_map' => true,        'icon' => array( 512, 512, 'M256 80C149.9 80 62.4 159.4 49.6 262c9.4-3.8 19.6-6 30.4-6c26.5 0 48 21.5 48 48l0 128c0 26.5-21.5 48-48 48c-44.2 0-80-35.8-80-80l0-16 0-48 0-48C0 146.6 114.6 32 256 32s256 114.6 256 256l0 48 0 48 0 16c0 44.2-35.8 80-80 80c-26.5 0-48-21.5-48-48l0-128c0-26.5 21.5-48 48-48c10.8 0 21 2.1 30.4 6C449.6 159.4 362.1 80 256 80z' ) ),
+		'checkout'   => array( 'label' => 'Checkout',              'group' => 'rooms', 'name_on_map' => false,       'icon' => array( 512, 512, 'M24 32C10.7 32 0 42.7 0 56L0 456c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24L64 56c0-13.3-10.7-24-24-24L24 32zm88 0c-8.8 0-16 7.2-16 16l0 416c0 8.8 7.2 16 16 16s16-7.2 16-16l0-416c0-8.8-7.2-16-16-16zm72 0c-13.3 0-24 10.7-24 24l0 400c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24l0-400c0-13.3-10.7-24-24-24l-16 0zm96 0c-13.3 0-24 10.7-24 24l0 400c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24l0-400c0-13.3-10.7-24-24-24l-16 0zM448 56l0 400c0 13.3 10.7 24 24 24l16 0c13.3 0 24-10.7 24-24l0-400c0-13.3-10.7-24-24-24l-16 0c-13.3 0-24 10.7-24 24zm-64-8l0 416c0 8.8 7.2 16 16 16s16-7.2 16-16l0-416c0-8.8-7.2-16-16-16s-16 7.2-16 16z' ) ),
+		'computers'  => array( 'label' => 'Computers',             'group' => 'rooms', 'name_on_map' => false,       'icon' => array( 640, 512, 'M384 96l0 224L64 320 64 96l320 0zM64 32C28.7 32 0 60.7 0 96L0 320c0 35.3 28.7 64 64 64l117.3 0-10.7 32L96 416c-17.7 0-32 14.3-32 32s14.3 32 32 32l256 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-74.7 0-10.7-32L384 384c35.3 0 64-28.7 64-64l0-224c0-35.3-28.7-64-64-64L64 32zm464 0c-26.5 0-48 21.5-48 48l0 352c0 26.5 21.5 48 48 48l64 0c26.5 0 48-21.5 48-48l0-352c0-26.5-21.5-48-48-48l-64 0zm16 64l32 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16s7.2-16 16-16zm-16 80c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16zm32 160a32 32 0 1 1 0 64 32 32 0 1 1 0-64z' ) ),
+		'office'     => array( 'label' => 'Office',                'group' => 'rooms', 'name_on_map' => true,        'icon' => null ),
+		'collection' => array( 'label' => 'Collection',            'group' => 'collections', 'name_on_map' => true,  'icon' => array( 448, 512, 'M96 0C43 0 0 43 0 96L0 416c0 53 43 96 96 96l288 0 32 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l0-64c17.7 0 32-14.3 32-32l0-320c0-17.7-14.3-32-32-32L384 0 96 0zm0 384l256 0 0 64L96 448c-17.7 0-32-14.3-32-32s14.3-32 32-32zm32-240c0-8.8 7.2-16 16-16l192 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-192 0c-8.8 0-16-7.2-16-16zm16 48l192 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-192 0c-8.8 0-16-7.2-16-16s7.2-16 16-16z' ) ),
+		'restroom'   => array( 'label' => 'Restroom',              'group' => 'facilities', 'name_on_map' => false,  'icon' => array( 640, 512, 'M80 48a48 48 0 1 1 96 0A48 48 0 1 1 80 48zm40 304l0 128c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-154.8c-8.1 9.2-21.1 13.2-33.5 9.4c-16.9-5.3-26.3-23.2-21-40.1l30.9-99.1C44.9 155.3 82 128 124 128l8 0c42 0 79.1 27.3 91.6 67.4l30.9 99.1c5.3 16.9-4.1 34.8-21 40.1c-12.4 3.9-25.4-.2-33.5-9.4L200 480c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-128-16 0zM320 0c13.3 0 24 10.7 24 24l0 464c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-464c0-13.3 10.7-24 24-24zM464 48a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zM440 480l0-96-17.8 0c-10.9 0-18.6-10.7-15.2-21.1l9-26.9c-3.2 0-6.4-.5-9.5-1.5c-16.9-5.3-26.3-23.2-21-40.1l29.7-95.2C428.4 156.9 467.6 128 512 128s83.6 28.9 96.8 71.2l29.7 95.2c5.3 16.9-4.1 34.8-21 40.1c-3.2 1-6.4 1.5-9.5 1.5l9 26.9c3.5 10.4-4.3 21.1-15.2 21.1L584 384l0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-96-16 0 0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32z' ) ),
+		'elevator'   => array( 'label' => 'Elevator',              'group' => 'facilities', 'name_on_map' => false,  'icon' => array( 512, 512, 'M132.7 4.7l-64 64c-4.6 4.6-5.9 11.5-3.5 17.4s8.3 9.9 14.8 9.9l128 0c6.5 0 12.3-3.9 14.8-9.9s1.1-12.9-3.5-17.4l-64-64c-6.2-6.2-16.4-6.2-22.6 0zM64 128c-35.3 0-64 28.7-64 64L0 448c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64L64 128zm96 96a48 48 0 1 1 0 96 48 48 0 1 1 0-96zM80 400c0-26.5 21.5-48 48-48l64 0c26.5 0 48 21.5 48 48l0 16c0 17.7-14.3 32-32 32l-96 0c-17.7 0-32-14.3-32-32l0-16zm192 0c0-26.5 21.5-48 48-48l64 0c26.5 0 48 21.5 48 48l0 16c0 17.7-14.3 32-32 32l-96 0c-17.7 0-32-14.3-32-32l0-16zm32-128a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zM356.7 91.3c6.2 6.2 16.4 6.2 22.6 0l64-64c4.6-4.6 5.9-11.5 3.5-17.4S438.5 0 432 0L304 0c-6.5 0-12.3 3.9-14.8 9.9s-1.1 12.9 3.5 17.4l64 64z' ) ),
+		'exit'       => array( 'label' => 'Entrance and exit',     'group' => 'facilities', 'name_on_map' => true,   'icon' => array( 640, 512, 'M208 96a48 48 0 1 0 0-96 48 48 0 1 0 0 96zM123.7 200.5c1-.4 1.9-.8 2.9-1.2l-16.9 63.5c-5.6 21.1-.1 43.6 14.7 59.7l70.7 77.1 22 88.1c4.3 17.1 21.7 27.6 38.8 23.3s27.6-21.7 23.3-38.8l-23-92.1c-1.9-7.8-5.8-14.9-11.2-20.8l-49.5-54 19.3-65.5 9.6 23c4.4 10.6 12.5 19.3 22.8 24.5l26.7 13.3c15.8 7.9 35 1.5 42.9-14.3s1.5-35-14.3-42.9L281 232.7l-15.3-36.8C248.5 154.8 208.3 128 163.7 128c-22.8 0-45.3 4.8-66.1 14l-8 3.5c-32.9 14.6-58.1 42.4-69.4 76.5l-2.6 7.8c-5.6 16.8 3.5 34.9 20.2 40.5s34.9-3.5 40.5-20.2l2.6-7.8c5.7-17.1 18.3-30.9 34.7-38.2l8-3.5zm-30 135.1L68.7 398 9.4 457.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L116.3 441c4.6-4.6 8.2-10.1 10.6-16.1l14.5-36.2-40.7-44.4c-2.5-2.7-4.8-5.6-7-8.6zM550.6 153.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L530.7 224 384 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l146.7 0-25.4 25.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l80-80c12.5-12.5 12.5-32.8 0-45.3l-80-80z' ) ),
+		'emergency-exit' => array( 'label' => 'Emergency exit',    'group' => 'emergency', 'name_on_map' => false,   'icon' => array( 448, 512, 'M320 48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM125.7 175.5c9.9-9.9 23.4-15.5 37.5-15.5c1.9 0 3.8 .1 5.6 .3L137.6 254c-9.3 28 1.7 58.8 26.8 74.5l86.2 53.9-25.4 88.8c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l28.7-100.4c5.9-20.6-2.6-42.6-20.7-53.9L238 299l30.9-82.4 5.1 12.3C289 264.7 323.9 288 362.7 288l21.3 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-21.3 0c-12.9 0-24.6-7.8-29.5-19.7l-6.3-15c-14.6-35.1-44.1-61.9-80.5-73.1l-48.7-15c-11.1-3.4-22.7-5.2-34.4-5.2c-31 0-60.8 12.3-82.7 34.3L57.4 153.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l23.1-23.1zM91.2 352L32 352c-17.7 0-32 14.3-32 32s14.3 32 32 32l69.6 0c19 0 36.2-11.2 43.9-28.5L157 361.6l-9.5-6c-17.5-10.9-30.5-26.8-37.9-44.9L91.2 352z' ) ),
+		'rescue'     => array( 'label' => 'Emergency rescue area', 'group' => 'emergency', 'name_on_map' => false,   'icon' => array( 512, 512, 'M192 96a48 48 0 1 0 0-96 48 48 0 1 0 0 96zM120.5 247.2c12.4-4.7 18.7-18.5 14-30.9s-18.5-18.7-30.9-14C43.1 225.1 0 283.5 0 352c0 88.4 71.6 160 160 160c61.2 0 114.3-34.3 141.2-84.7c6.2-11.7 1.8-26.2-9.9-32.5s-26.2-1.8-32.5 9.9C240 440 202.8 464 160 464C98.1 464 48 413.9 48 352c0-47.9 30.1-88.8 72.5-104.8zM259.8 176l-1.9-9.7c-4.5-22.3-24-38.3-46.8-38.3c-30.1 0-52.7 27.5-46.8 57l23.1 115.5c6 29.9 32.2 51.4 62.8 51.4l5.1 0c.4 0 .8 0 1.3 0l94.1 0c6.7 0 12.6 4.1 15 10.4L402 459.2c6 16.1 23.8 24.6 40.1 19.1l48-16c16.8-5.6 25.8-23.7 20.2-40.5s-23.7-25.8-40.5-20.2l-18.7 6.2-25.5-68c-11.7-31.2-41.6-51.9-74.9-51.9l-68.5 0-9.6-48 63.4 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-76.2 0z' ) ),
+		'kit'        => array( 'label' => 'Emergency kit',         'group' => 'emergency', 'name_on_map' => false,   'icon' => array( 576, 512, 'M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l32 0L96 32 64 32zm64 0l0 448 320 0 0-448L128 32zM512 480c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64l-32 0 0 448 32 0zM256 176c0-8.8 7.2-16 16-16l32 0c8.8 0 16 7.2 16 16l0 48 48 0c8.8 0 16 7.2 16 16l0 32c0 8.8-7.2 16-16 16l-48 0 0 48c0 8.8-7.2 16-16 16l-32 0c-8.8 0-16-7.2-16-16l0-48-48 0c-8.8 0-16-7.2-16-16l0-32c0-8.8 7.2-16 16-16l48 0 0-48z' ) ),
 	);
 }
 
@@ -309,32 +309,35 @@ function wpfloors_map( $floor ) {
 	);
 }
 
-/** A type's icon, centered inside its marker shape (marker units, radius ~1). */
+/**
+ * A type's icon, centered on the spot and fitted into a 2 x 2 box (marker units). The white outline
+ * is 0.3 units wide; the icon's own units are scaled, so its stroke-width is set to match.
+ */
 function wpfloors_icon_path( $t ) {
 	if ( empty( $t['icon'] ) ) { return ''; }
-	$k = $t['is'] / $t['icon'][1];
-	$x = $t['ix'] - $t['icon'][0] * $k / 2;
-	$y = $t['iy'] - $t['icon'][1] * $k / 2;
-	return '<path class="ic" transform="translate(' . round( $x, 4 ) . ' ' . round( $y, 4 ) . ') scale(' . round( $k, 6 ) . ')" d="' . esc_attr( $t['icon'][2] ) . '"/>';
+	$k = 2 / max( $t['icon'][0], $t['icon'][1] );
+	$x = -$t['icon'][0] * $k / 2;
+	$y = -$t['icon'][1] * $k / 2;
+	return '<path class="ic" transform="translate(' . round( $x, 4 ) . ' ' . round( $y, 4 ) . ') scale(' . round( $k, 6 ) . ')" stroke-width="' . round( 0.3 / $k, 1 ) . '" d="' . esc_attr( $t['icon'][2] ) . '"/>';
 }
 
 /**
- * An office number inside its folder marker. The folder is 2.6 units wide, so the text shrinks to
- * stay within 2.3 units. At size 1 a bold digit is about 0.6 units wide, M and W about 1, and other
- * letters about 0.75: "214" is full size, "88888" about three-quarters, "WWWWW" under half.
+ * An office's marker: its number, or "#" when it has none. The text shrinks to stay within 2.3
+ * units, about the width of an icon. At size 1 a bold digit is about 0.6 units wide, M and W about 1,
+ * and other letters about 0.75: "214" is full size, "88888" about three-quarters, "WWWWW" under half.
  * The admin script uses the same formula.
  */
 function wpfloors_number_text( $number ) {
-	if ( '' === $number ) { return ''; }
+	if ( '' === $number ) { $number = '#'; }
 	$w = 0;
 	foreach ( str_split( $number ) as $c ) {
 		$w += ctype_digit( $c ) ? 0.6 : ( false !== strpos( 'MWmw', $c ) ? 1 : 0.75 );
 	}
 	$f = round( min( 1, 2.3 / $w ), 3 );
-	return '<text class="no" x="0" y="' . round( 0.1 + 0.36 * $f, 3 ) . '" font-size="' . $f . '">' . esc_html( $number ) . '</text>';
+	return '<text class="no" x="0" y="' . round( 0.36 * $f, 3 ) . '" font-size="' . $f . '">' . esc_html( $number ) . '</text>';
 }
 
-/** One label on the map: its marker shape, icon and name, in marker units (radius 1). */
+/** One label on the map: its icon (or office number) and name, in marker units (radius 1). */
 function wpfloors_marker( $lb, $vb ) {
 	$types = wpfloors_types();
 	if ( ! isset( $types[ $lb['type'] ] ) ) { return ''; }
@@ -344,7 +347,7 @@ function wpfloors_marker( $lb, $vb ) {
 	$cy    = $vb[1] + $lb['y'] / 100 * $vb[3];
 	$right = $lb['x'] > 65; // Names near the right edge go on the left of the marker.
 	return '<g class="mk" transform="translate(' . wpfloors_num( $cx ) . ' ' . wpfloors_num( $cy ) . ') scale(' . wpfloors_num( $r ) . ')">'
-		. '<path class="sh" d="' . esc_attr( $t['shape'] ) . '"/>' . wpfloors_icon_path( $t ) . wpfloors_number_text( $lb['number'] )
+		. ( 'office' === $lb['type'] ? wpfloors_number_text( $lb['number'] ) : wpfloors_icon_path( $t ) )
 		. ( $lb['show'] ? '<text class="nm' . ( $right ? ' end' : '' ) . '" x="' . ( $right ? '-1.6' : '1.6' ) . '" y="0.36" font-size="1">' . esc_html( $lb['name'] ) . '</text>' : '' )
 		. '</g>';
 }
@@ -353,8 +356,8 @@ function wpfloors_marker( $lb, $vb ) {
 function wpfloors_icon( $type, $number = '' ) {
 	$t = wpfloors_types();
 	$t = $t[ $type ];
-	return '<svg class="wpfloors-svg wpfloors-icon" viewBox="-1.5 -1.5 3 3" aria-hidden="true" focusable="false"><g class="mk">'
-		. '<path class="sh" d="' . esc_attr( $t['shape'] ) . '"/>' . wpfloors_icon_path( $t ) . wpfloors_number_text( $number ) . '</g></svg>';
+	return '<svg class="wpfloors-svg wpfloors-icon" viewBox="-1.25 -1.25 2.5 2.5" aria-hidden="true" focusable="false"><g class="mk">'
+		. ( 'office' === $type ? wpfloors_number_text( $number ) : wpfloors_icon_path( $t ) ) . '</g></svg>';
 }
 
 /** A map as inline SVG, with its labels. $map comes from wpfloors_map(). */
@@ -374,11 +377,10 @@ function wpfloors_svg( $map, $labels, $aria_label ) {
 function wpfloors_svg_css() {
 	return <<<'CSS'
 .wpfloors-svg{display:block;width:100%;height:auto;max-height:85vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-.wpfloors-svg .mk .sh{fill:#fff;stroke:#000;stroke-width:.12;stroke-linejoin:round}
-.wpfloors-svg .mk .ic{fill:#000}
+.wpfloors-svg .mk .ic{fill:#000;stroke:#fff;stroke-linejoin:round;paint-order:stroke}
 .wpfloors-svg .mk .nm{fill:#000;font-weight:600;stroke:#fff;stroke-width:.32;stroke-linejoin:round;paint-order:stroke}
 .wpfloors-svg .mk .nm.end{text-anchor:end}
-.wpfloors-svg .mk .no{fill:#000;font-weight:700;text-anchor:middle}
+.wpfloors-svg .mk .no{fill:#000;font-weight:700;text-anchor:middle;stroke:#fff;stroke-width:.3;stroke-linejoin:round;paint-order:stroke}
 .wpfloors-svg.wpfloors-icon{display:inline-block;width:2em;height:2em;max-height:none;vertical-align:middle;flex:0 0 auto}
 CSS;
 }
@@ -579,8 +581,8 @@ function wpfloors_admin_markup() {
   #wpfloors-stage{border:1px solid #c3c4c7;background:#fff;padding:4px;min-height:60px}
   #wpfloors-stage .wpfloors-svg{cursor:crosshair;max-height:75vh}
   #wpfloors-stage .empty{padding:20px;margin:0;color:#50575e}
-  #wpfloors-stage .mk.is-pending path{stroke-dasharray:.3 .2}
-  #wpfloors-stage .mk.is-active path{stroke-width:.3}
+  #wpfloors-stage .mk.is-pending{opacity:.55}
+  #wpfloors-stage .mk.is-active .ic,#wpfloors-stage .mk.is-active .no{fill:#2271b1}
   #wpfloors-form{background:#fff;border:1px solid #c3c4c7;border-left:4px solid #2271b1;padding:4px 16px 12px;margin:12px 0}
   #wpfloors-form legend{font-size:1.1em;font-weight:600;padding:8px 0}
   #wpfloors-form .row{display:flex;flex-wrap:wrap;gap:12px 20px;margin:8px 0}
@@ -632,7 +634,7 @@ function wpfloors_admin_markup() {
         <div><label for="wpfloors-x">Across (% from left)</label><input id="wpfloors-x" type="number" min="0" max="100" step="0.1"></div>
         <div><label for="wpfloors-y">Down (% from top)</label><input id="wpfloors-y" type="number" min="0" max="100" step="0.1"></div>
       </div>
-      <p class="hint">Click the map to set the position, or type it in Across and Down. The dashed marker shows where the label will go.</p>
+      <p class="hint">Click the map to set the position, or type it in Across and Down. The faded marker shows where the label will go.</p>
       <p id="wpfloors-error" role="alert"></p>
       <button type="submit" class="button button-primary" id="wpfloors-ok">Add label</button>
       <button type="button" class="button" id="wpfloors-cancel">Cancel</button>
@@ -777,9 +779,8 @@ function marker(lb,cls){
   var t=types[lb.type];if(!t)return null;
   var r=Math.max(vb[2],vb[3])*0.02,cx=vb[0]+lb.x/100*vb[2],cy=vb[1]+lb.y/100*vb[3],right=lb.x>65;
   var g=svgEl("g",{"class":"mk"+(cls?" "+cls:""),transform:"translate("+num(cx)+" "+num(cy)+") scale("+num(r)+")"});
-  g.appendChild(svgEl("path",{"class":"sh",d:t.shape}));
-  if(t.icon){var k=t.is/t.icon[1];g.appendChild(svgEl("path",{"class":"ic",transform:"translate("+(t.ix-t.icon[0]*k/2)+" "+(t.iy-t.icon[1]*k/2)+") scale("+k+")",d:t.icon[2]}));}
-  if(lb.number){var w=0;lb.number.split("").forEach(function(c){w+=/[0-9]/.test(c)?0.6:(/[MWmw]/.test(c)?1:0.75);});var f=Math.round(Math.min(1,2.3/w)*1000)/1000,T=svgEl("text",{"class":"no",x:0,y:Math.round((0.1+0.36*f)*1000)/1000,"font-size":f});T.textContent=lb.number;g.appendChild(T);}
+  if(t.icon){var k=2/Math.max(t.icon[0],t.icon[1]);g.appendChild(svgEl("path",{"class":"ic",transform:"translate("+(-t.icon[0]*k/2)+" "+(-t.icon[1]*k/2)+") scale("+k+")","stroke-width":Math.round(3/k)/10,d:t.icon[2]}));}
+  else{var no=lb.number||"#",w=0;no.split("").forEach(function(c){w+=/[0-9]/.test(c)?0.6:(/[MWmw]/.test(c)?1:0.75);});var f=Math.round(Math.min(1,2.3/w)*1000)/1000,T=svgEl("text",{"class":"no",x:0,y:Math.round(0.36*f*1000)/1000,"font-size":f});T.textContent=no;g.appendChild(T);}
   if(lb.show){var N=svgEl("text",{"class":"nm"+(right?" end":""),x:right?-1.6:1.6,y:0.36,"font-size":1});N.textContent=lb.name;g.appendChild(N);}
   return g;
 }
