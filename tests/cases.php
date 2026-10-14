@@ -57,7 +57,7 @@ ok( ! isset( $s['labels']['gone'] ), 'labels for a deleted floor dropped' );
 
 /* ---------------- labels ---------------- */
 
-ok( labs( array( lbl() ) ) === array( array( 'id' => 'a1', 'name' => 'Room', 'type' => 'room', 'note' => '', 'show' => true, 'x' => 10.0, 'y' => 20.0 ) ), 'clean label kept as is' );
+ok( labs( array( lbl() ) ) === array( array( 'id' => 'a1', 'name' => 'Room', 'type' => 'room', 'note' => '', 'number' => '', 'show' => true, 'x' => 10.0, 'y' => 20.0 ) ), 'clean label kept as is' );
 
 /* "Show name on the map": a yes/no value, or the type's default when missing or unclear. */
 $l = labs( array(
@@ -245,6 +245,16 @@ $h4 = wpfloors_shortcode();
 ok( false !== strpos( $h4, '<span class="wpfloors-sr">Checkout: </span><strong>Self Checkout</strong>' ) && false === strpos( $h4, '>Self Checkout</text>' ) && false !== strpos( $h4, 'M-1.3-.75H1.3V.75H-1.3Z' ) && false !== strpos( $h4, '<span>Checkout</span>' ), 'checkout: listed, symbol only on the map, its own shape, in the key' );
 ok( array() === labs( array( lbl( array( 'type' => 'text' ) ) ) ), 'the removed Text only type is no longer accepted' );
 ok( array() === labs( array( lbl( array( 'type' => 'stairs' ) ) ) ), 'the removed Stairs type is no longer accepted' );
+ok( '2M201' === labs( array( lbl( array( 'type' => 'office', 'number' => ' 2M-201<b>9' ) ) ) )[0]['number'], 'office number keeps letters and digits, at most 5' );
+ok( '' === labs( array( lbl( array( 'type' => 'room', 'number' => '214' ) ) ) )[0]['number'], 'only offices have a number' );
+ok( '' === labs( array( lbl( array( 'type' => 'office', 'number' => array( 1 ) ) ) ) )[0]['number'], 'junk office number is dropped' );
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't9', 'name' => "Dean's office", 'type' => 'office', 'number' => '2M201', 'note' => '', 'x' => 30, 'y' => 30 );
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't10', 'name' => 'Office 7', 'type' => 'office', 'number' => '7', 'note' => '', 'x' => 35, 'y' => 30 );
+$h7 = wpfloors_shortcode();
+ok( false !== strpos( $h7, '<text class="no" x="0" y="0.343" font-size="0.676">2M201</text>' ), 'a 5-character number shrinks to fit the folder' );
+ok( false !== strpos( $h7, '<text class="no" x="0" y="0.46" font-size="1">7</text>' ), 'a short number is full size' );
+ok( false !== strpos( $h7, '<span class="wpfloors-sr">Office 2M201: </span><strong>Dean&#039;s office</strong>' ), 'screen readers hear the office number' );
+ok( false !== strpos( $h7, 'M-1.3-.95H-.35L-.15-.7H1.3V.9H-1.3Z' ) && false !== strpos( $h7, '<span>Office</span>' ), 'office: folder shape, in the key' );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't6', 'name' => 'Main Entrance', 'type' => 'exit', 'note' => '', 'x' => 60, 'y' => 90 );
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't7', 'name' => 'North stairwell door', 'type' => 'emergency-exit', 'note' => 'Alarmed', 'x' => 10, 'y' => 10 );
 $h5 = wpfloors_shortcode();

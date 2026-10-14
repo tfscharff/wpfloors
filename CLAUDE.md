@@ -46,7 +46,7 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
 - Store everything in one option. Follow the `wphours` pattern: one option, and every write goes
   through a single sanitize function.
 - Labels are keyed by floor slug. Each label is
-  `{id, name, type, note, show, x, y}`, with `x` and `y` as percentages of the map. `show` is
+  `{id, name, type, note, number, show, x, y}`, with `x` and `y` as percentages of the map. `show` is
   "Show name on the map" (2.1.0). It defaults by type: on for rooms, services, studios and collections,
   off for the rest. The list always shows every name.
 - `type` is exactly one of:
@@ -56,6 +56,9 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   - studio (added in 2.7.0; listed under "Rooms and services")
   - checkout (added in 2.8.0; listed under "Rooms and services")
   - computers (added in 2.10.0; listed under "Rooms and services")
+  - office (added in 2.12.0; listed under "Rooms and services"): a folder marker with no icon; the
+    label's `number` (up to 5 letters and digits, '' for other types) shows inside it, shrunk by
+    `wpfloors_number_text()` to fit (digits 0.6, M/W 1, other letters 0.75 units at size 1)
   (A "text only" type was added in 2.7.0 and removed in 2.8.0 at the user's request.)
   - collection
   - restroom

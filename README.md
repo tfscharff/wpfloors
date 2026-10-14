@@ -16,7 +16,7 @@ also appears in the text list.
 
 ## Status
 
-2.11.0 is the current release. A fresh install has no floors and no maps.
+2.12.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -35,7 +35,7 @@ also appears in the text list.
 
 - Nothing changes on the website until you click **Save**.
 - **Show name on the map:** each label has this checkbox. It's on by default for rooms, services,
-  studios, collections and entrances, and off for printers, checkouts, computers, restrooms,
+  studios, collections, offices and entrances, and off for printers, checkouts, computers, restrooms,
   elevators, emergency exits, rescue areas and kits, whose symbol says what they are. Turn
   it off wherever names would overlap. Every name is always in the list under the map.
 - Deleting a floor deletes its labels when you click Save. Reload the page before saving to undo.
@@ -64,6 +64,13 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.12.0 (2026-10-14)
+
+- New **Office** label type: a folder-shaped marker with the office's number inside it, in place of
+  an icon. Choose Office as the type and an **Office number** field appears (up to 5 letters and
+  digits, e.g. "214" or "2M201"). Longer numbers shrink to fit. Listed under "Rooms and services",
+  name shown on the map by default; screen readers hear the number in the list ("Office 214").
 
 ### 2.11.0 (2026-10-14)
 
