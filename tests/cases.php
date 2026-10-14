@@ -250,6 +250,9 @@ $h5 = wpfloors_shortcode();
 ok( false !== strpos( $h5, '<h3>Restrooms, elevators, stairs and entrances</h3><ul><li>' ) && false !== strpos( $h5, '<strong>Main Entrance</strong>' ) && false !== strpos( $h5, '>Main Entrance</text>' ), 'entrances are listed with restrooms, elevators and stairs, named on the map' );
 ok( false !== strpos( $h5, '<h3>Emergency: exits, rescue areas and kits</h3>' ) && false !== strpos( $h5, '<strong>North stairwell door</strong>. Alarmed' ) && false === strpos( $h5, '>North stairwell door</text>' ), 'emergency exits are listed under Emergency, symbol only on the map' );
 ok( false !== strpos( $h5, '<span>Entrance and exit</span>' ) && false !== strpos( $h5, '<span>Emergency exit</span>' ), 'both are in the key' );
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't8', 'name' => 'Public computers', 'type' => 'computers', 'note' => '', 'x' => 70, 'y' => 70 );
+$h6 = wpfloors_shortcode();
+ok( false !== strpos( $h6, 'Computers: <strong>Public computers</strong>' ) && false === strpos( $h6, '>Public computers</text>' ) && false !== strpos( $h6, 'M0-1.25L1.2-.3V1H-1.2V-.3Z' ) && false !== strpos( $h6, '<span>Computers</span>' ), 'computers: listed, symbol only on the map, its own shape, in the key' );
 ok( false !== strpos( $h4, 'Studio: <strong>Podcast Studio</strong>' ) && false !== strpos( $h4, '>Podcast Studio</text>' ) && false !== strpos( $h4, 'M-.62-.9H1.28L.62 .9H-1.28Z' ), 'studio: listed, named on the map, its own shape' );
 
 ok( 1 === substr_count( $html, 'class="nm end"' ), 'names near the right edge are anchored at the end' );

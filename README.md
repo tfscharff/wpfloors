@@ -16,7 +16,7 @@ also appears in the text list.
 
 ## Status
 
-2.9.0 is the current release. A fresh install has no floors and no maps.
+2.10.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -35,9 +35,9 @@ also appears in the text list.
 
 - Nothing changes on the website until you click **Save**.
 - **Show name on the map:** each label has this checkbox. It's on by default for rooms, services,
-  studios and collections, and off for printers, checkouts, restrooms, elevators, stairs, exits, rescue areas and kits,
-  whose symbol says what they are. Turn it off wherever names would overlap. Every name is always in the
-  list under the map.
+  studios, collections and entrances, and off for printers, checkouts, computers, restrooms,
+  elevators, stairs, emergency exits, rescue areas and kits, whose symbol says what they are. Turn
+  it off wherever names would overlap. Every name is always in the list under the map.
 - Deleting a floor deletes its labels when you click Save. Reload the page before saving to undo.
 - To place a label without a mouse, use **Add a label by typing its position** (or **Edit**) and type the position in
   **Across** and **Down** (percent of the map from the left and from the top).
@@ -64,6 +64,11 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.10.0 (2026-10-14)
+
+- New **Computers** label type: Font Awesome computer icon in a house-shaped marker, listed under
+  "Rooms and services", symbol only on the map by default.
 
 ### 2.9.0 (2026-10-14)
 

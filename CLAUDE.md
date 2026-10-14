@@ -55,6 +55,7 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   - printer (added in 2.6.0; listed under "Rooms and services")
   - studio (added in 2.7.0; listed under "Rooms and services")
   - checkout (added in 2.8.0; listed under "Rooms and services")
+  - computers (added in 2.10.0; listed under "Rooms and services")
   (A "text only" type was added in 2.7.0 and removed in 2.8.0 at the user's request.)
   - collection
   - restroom
