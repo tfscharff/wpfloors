@@ -61,8 +61,9 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   - computers (added in 2.10.0; listed under "Rooms and services")
   - office (added in 2.12.0; listed under "Rooms and services"): no icon; the marker is the
     label's `number` (up to 5 letters, digits and hyphens since 2.15.0; '' for types without `chars`;
-    "#" when empty), shrunk by `wpfloors_number_text()` to fit (digits 0.6, M/W 1, hyphen 0.4, other
-    letters 0.75 units at size 1)
+    "#" when empty), always name size (2.21.0, at the user's request; never shrink them).
+    `wpfloors_chars_width()` estimates their width (digits 0.6, M/W 1, hyphen 0.4, other letters
+    0.75) so a name beside them clears them. In the list they're HTML text, not SVG
   (A "text only" type was added in 2.7.0 and removed in 2.8.0 at the user's request.)
   - collection (since 2.14.0 it can have up to 5 characters in `number` too, shown in place of the
     book icon; with none it keeps the icon)

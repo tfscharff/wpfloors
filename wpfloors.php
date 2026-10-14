@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Floor Maps
  * Description:       Accessible floor maps for a library or any building. Staff upload an SVG map for each floor and add every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
- * Version:           2.20.0
+ * Version:           2.21.0
  * Author:            Madeleine Clark Wallace Library
  * License:           GPL-2.0+
  * Requires at least: 5.6
@@ -26,7 +26,7 @@ define( 'WPFLOORS_MAX_SVG_BYTES', 5 * 1024 * 1024 );
  * (https://fontawesome.com, icons licensed CC BY 4.0, Copyright 2024 Fonticons, Inc.): [width,
  * height, path]. Every icon is drawn 1.5 units tall, 1.5 times the name text. name_on_map is the default for a label's "Show name on the map" checkbox: the icon
  * alone says what a restroom or an exit is, but not which room or service is which.
- * chars names the form field for up to 5 characters that replace the icon (wpfloors_number_text()):
+ * chars names the form field for up to 5 characters that replace the icon (wpfloors_chars()):
  * an office's number, or a collection's call number letters. Office has no icon, so it shows "#" without.
  */
 function wpfloors_types() {
@@ -332,20 +332,22 @@ function wpfloors_icon_path( $t ) {
 	return '<path class="ic" transform="translate(' . round( $x, 4 ) . ' ' . round( $y, 4 ) . ') scale(' . round( $k, 6 ) . ')" stroke-width="' . round( 0.3 / $k, 1 ) . '" d="' . esc_attr( $t['icon'][2] ) . '"/>';
 }
 
+/** The characters a label shows in place of an icon: its own, or "#" for an office with none. */
+function wpfloors_chars( $number ) {
+	return '' === $number ? '#' : $number;
+}
+
 /**
- * Characters in place of an icon: an office's number ("#" when it has none) or a collection's letters. The text shrinks to stay within 1.7
- * units, about the width of an icon. At size 1 a bold digit is about 0.6 units wide, M and W about 1,
- * a hyphen about 0.4, and other letters about 0.75: "214" is full size, "88888" about three-quarters, "WWWWW" under half.
- * The admin script uses the same formula.
+ * About how wide characters are at name size (1 unit): a bold digit is about 0.6 units, M and W
+ * about 1, a hyphen 0.4 and other letters 0.75. Used to keep the name clear of long characters.
+ * The admin script uses the same estimate.
  */
-function wpfloors_number_text( $number ) {
-	if ( '' === $number ) { $number = '#'; }
+function wpfloors_chars_width( $chars ) {
 	$w = 0;
-	foreach ( str_split( $number ) as $c ) {
+	foreach ( str_split( $chars ) as $c ) {
 		$w += '-' === $c ? 0.4 : ( ctype_digit( $c ) ? 0.6 : ( false !== strpos( 'MWmw', $c ) ? 1 : 0.75 ) );
 	}
-	$f = round( min( 1, 1.7 / $w ), 3 );
-	return '<text class="no" x="0" y="' . round( 0.36 * $f, 3 ) . '" font-size="' . $f . '">' . esc_html( $number ) . '</text>';
+	return $w;
 }
 
 /** One label on the map: its icon (or its characters) and name, in marker units (radius 1). */
@@ -356,28 +358,38 @@ function wpfloors_marker( $lb, $vb ) {
 	$r     = max( $vb[2], $vb[3] ) * 0.02;
 	$cx    = $vb[0] + $lb['x'] / 100 * $vb[2];
 	$cy    = $vb[1] + $lb['y'] / 100 * $vb[3];
-	// Name placement in marker units: [x, y, class]. The icon fills -1..1; y is the text baseline.
-	$at = array(
-		'right'  => array( '1.3', '0.36', 'nm' ),
-		'left'   => array( '-1.3', '0.36', 'nm end' ),
-		'top'    => array( '0', '-1.15', 'nm mid' ),
-		'bottom' => array( '0', '1.8', 'nm mid' ),
+	$icon  = ! isset( $lb['show_icon'] ) || $lb['show_icon'];
+	$chars = '' !== $lb['number'] || empty( $t['icon'] ) ? wpfloors_chars( $lb['number'] ) : '';
+	// Name placement in marker units: [x, y, class]; y is the text baseline. An icon is 1.5 units
+	// tall. Characters are name size, so a name beside them clears their width and one above or
+	// below sits closer.
+	$side = '' === $chars ? 1.3 : max( 1.3, round( wpfloors_chars_width( $chars ) / 2 + 0.35, 2 ) );
+	$at   = array(
+		'right'  => array( $side, '0.36', 'nm' ),
+		'left'   => array( -$side, '0.36', 'nm end' ),
+		'top'    => array( '0', '' === $chars ? '-1.15' : '-0.75', 'nm mid' ),
+		'bottom' => array( '0', '' === $chars ? '1.8' : '1.45', 'nm mid' ),
 	);
 	// Without its icon, the name is centered on the spot.
-	$icon = ! isset( $lb['show_icon'] ) || $lb['show_icon'];
-	$at   = $icon ? $at[ $lb['pos'] ] : array( '0', '0.36', 'nm mid' );
+	$at = $icon ? $at[ $lb['pos'] ] : array( '0', '0.36', 'nm mid' );
 	return '<g class="mk" transform="translate(' . wpfloors_num( $cx ) . ' ' . wpfloors_num( $cy ) . ') scale(' . wpfloors_num( $r ) . ')">'
-		. ( ! $icon ? '' : ( '' !== $lb['number'] || empty( $t['icon'] ) ? wpfloors_number_text( $lb['number'] ) : wpfloors_icon_path( $t ) ) )
+		. ( ! $icon ? '' : ( '' !== $chars ? '<text class="no" x="0" y="0.36" font-size="1">' . esc_html( $chars ) . '</text>' : wpfloors_icon_path( $t ) ) )
 		. ( $lb['show'] ? '<text class="' . $at[2] . '" x="' . $at[0] . '" y="' . $at[1] . '" font-size="1">' . esc_html( $lb['name'] ) . '</text>' : '' )
 		. '</g>';
 }
 
-/** A small marker icon for the key and the lists, or the label's characters. Hidden from screen readers. */
+/**
+ * A small marker icon for the key and the lists, or the label's characters as text the same size as
+ * the name. Hidden from screen readers.
+ */
 function wpfloors_icon( $type, $number = '' ) {
 	$t = wpfloors_types();
 	$t = $t[ $type ];
+	if ( '' !== $number || empty( $t['icon'] ) ) {
+		return '<span class="wpfloors-chars" aria-hidden="true">' . esc_html( wpfloors_chars( $number ) ) . '</span>';
+	}
 	return '<svg class="wpfloors-svg wpfloors-icon" viewBox="-1.25 -1.25 2.5 2.5" aria-hidden="true" focusable="false"><g class="mk">'
-		. ( '' !== $number || empty( $t['icon'] ) ? wpfloors_number_text( $number ) : wpfloors_icon_path( $t ) ) . '</g></svg>';
+		. wpfloors_icon_path( $t ) . '</g></svg>';
 }
 
 /** A map as inline SVG, with its labels. $map comes from wpfloors_map(). */
@@ -497,6 +509,7 @@ function wpfloors_page_css() {
 .wpfloors-key ul{display:flex;flex-wrap:wrap;gap:.3em 1.2em}
 .wpfloors-key li,.wpfloors-group li{display:flex;align-items:flex-start;gap:.4em;margin:.25em 0}
 .wpfloors-group li .wpfloors-icon{margin-top:-.15em}
+.wpfloors-chars{display:inline-block;min-width:2em;flex:0 0 auto;font-weight:700;text-align:center}
 .wpfloors-sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media print{
   .wpfloors-full-link{display:none}
@@ -809,12 +822,14 @@ function marker(lb,cls){
   var r=Math.max(vb[2],vb[3])*0.02,cx=vb[0]+lb.x/100*vb[2],cy=vb[1]+lb.y/100*vb[3];
   var g=svgEl("g",{"class":"mk"+(cls?" "+cls:""),transform:"translate("+num(cx)+" "+num(cy)+") scale("+num(r)+")"});
   /* With both turned off, the editor still shows a faint icon so the label can be found; the public map shows nothing. */
+  var chars=lb.number||(t.icon?"":"#"),w=0;chars.split("").forEach(function(c){w+=c==="-"?0.4:(/[0-9]/.test(c)?0.6:(/[MWmw]/.test(c)?1:0.75));});
+  var side=chars?Math.max(1.3,Math.round((w/2+0.35)*100)/100):1.3;
   var showIcon=lb.show_icon!==false,ghost=!showIcon&&!lb.show,ic=showIcon||ghost?(ghost?" off":""):null;
   if(ic===null){}
-  else if(t.icon&&!lb.number){var k=1.5/t.icon[1];g.appendChild(svgEl("path",{"class":"ic"+ic,transform:"translate("+(-t.icon[0]*k/2)+" "+(-t.icon[1]*k/2)+") scale("+k+")","stroke-width":Math.round(3/k)/10,d:t.icon[2]}));}
-  else{var no=lb.number||"#",w=0;no.split("").forEach(function(c){w+=c==="-"?0.4:(/[0-9]/.test(c)?0.6:(/[MWmw]/.test(c)?1:0.75));});var f=Math.round(Math.min(1,1.7/w)*1000)/1000,T=svgEl("text",{"class":"no"+ic,x:0,y:Math.round(0.36*f*1000)/1000,"font-size":f});T.textContent=no;g.appendChild(T);}
+  else if(!chars){var k=1.5/t.icon[1];g.appendChild(svgEl("path",{"class":"ic"+ic,transform:"translate("+(-t.icon[0]*k/2)+" "+(-t.icon[1]*k/2)+") scale("+k+")","stroke-width":Math.round(3/k)/10,d:t.icon[2]}));}
+  else{var T=svgEl("text",{"class":"no"+ic,x:0,y:0.36,"font-size":1});T.textContent=chars;g.appendChild(T);}
   /* Same placements as the PHP wpfloors_marker(). */
-  var at=showIcon?({right:[1.3,0.36,"nm"],left:[-1.3,0.36,"nm end"],top:[0,-1.15,"nm mid"],bottom:[0,1.8,"nm mid"]}[lb.pos]||[1.3,0.36,"nm"]):[0,0.36,"nm mid"];
+  var at=showIcon?({right:[side,0.36,"nm"],left:[-side,0.36,"nm end"],top:[0,chars?-0.75:-1.15,"nm mid"],bottom:[0,chars?1.45:1.8,"nm mid"]}[lb.pos]||[side,0.36,"nm"]):[0,0.36,"nm mid"];
   if(lb.show){var N=svgEl("text",{"class":at[2],x:at[0],y:at[1],"font-size":1});N.textContent=lb.name;g.appendChild(N);}
   return g;
 }

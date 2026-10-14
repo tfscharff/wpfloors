@@ -17,7 +17,7 @@ also appears in the text list.
 
 ## Status
 
-2.20.0 is the current release. A fresh install has no floors and no maps.
+2.21.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -65,6 +65,12 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.21.0 (2026-10-14)
+
+- Office and collection characters are always the same size as the names, instead of shrinking to
+  an icon's width. On the map, a name beside long characters moves out to clear them. In the list
+  they're plain bold text, the same size as the name.
 
 ### 2.20.0 (2026-10-14)
 
