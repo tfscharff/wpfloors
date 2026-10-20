@@ -17,7 +17,7 @@ also appears in the text list.
 
 ## Status
 
-2.23.0 is the current release. A fresh install has no floors and no maps.
+2.24.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -36,7 +36,8 @@ also appears in the text list.
 
 - Nothing changes on the website until you click **Save**.
 - **Show name on the map:** each label has this checkbox. It's on by default for rooms, services,
-  studios, collections, offices and entrances, and off for printers, checkouts, computers, restrooms,
+  quiet study areas, studios, collections, offices and entrances, and off for printers, checkouts,
+  computers, vending machines, restrooms,
   elevators, emergency exits, rescue areas and kits, whose symbol says what they are. Turn
   it off wherever names would overlap. Every name is always in the list under the map.
 - Deleting a floor deletes its labels when you click Save. Reload the page before saving to undo.
@@ -65,6 +66,14 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.24.0 (2026-10-20)
+
+- New **Quiet study** label type: Font Awesome's muted speaker (volume-xmark) icon, listed under
+  "Rooms and services", with its name on the map by default.
+- New **Vending machines** label type: Font Awesome's cookie-bite icon, listed under "Rooms and
+  services", symbol only on the map by default.
+- **Studio** uses Font Awesome's microphone in place of the headphones.
 
 ### 2.23.0 (2026-10-14)
 

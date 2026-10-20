@@ -49,18 +49,22 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
   through a single sanitize function.
 - Labels are keyed by floor slug. Each label is
   `{id, name, type, note, number, show, pos, show_icon, x, y}`, with `x` and `y` as percentages of the map. `show` is
-  "Show name on the map" (2.1.0). It defaults by type: on for rooms, services, studios and collections,
+  "Show name on the map" (2.1.0). It defaults by type: on for rooms, quiet study, services, studios and collections,
   off for the rest. The list always shows every name. `pos` (2.17.0) is where the name sits: top, right,
   bottom or left; without one, left when x > 65, otherwise right. `show_icon` (2.20.0, default
   on) hides the icon or characters on the map; the name is then centered on the spot, and the key
   lists only types whose icons show on that floor's map.
 - `type` is exactly one of:
   - room
+  - quiet (shown as "Quiet study", added in 2.24.0; muted speaker icon; listed under "Rooms and
+    services")
   - service (added in 2.4.0, when "room or service" was split in two)
   - printer (added in 2.6.0; listed under "Rooms and services")
-  - studio (added in 2.7.0; listed under "Rooms and services")
+  - studio (added in 2.7.0; listed under "Rooms and services"; microphone icon since 2.24.0)
   - checkout (added in 2.8.0; listed under "Rooms and services")
   - computers (added in 2.10.0; listed under "Rooms and services")
+  - vending (shown as "Vending machines", added in 2.24.0; cookie-bite icon; listed under "Rooms and
+    services")
   - office (added in 2.12.0; listed under "Rooms and services"): hashtag icon (2.23.0), used in
     the key and when there's no number; otherwise the marker is the label's `number` (up to 5 letters, digits and hyphens since 2.15.0; '' for types without `chars`), always name size (2.21.0, at the user's request; never shrink them).
     `wpfloors_chars_width()` estimates their width (digits 0.6, M/W 1, hyphen 0.4, other letters

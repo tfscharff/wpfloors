@@ -246,6 +246,15 @@ $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' =>
 $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't5', 'name' => 'Self Checkout', 'type' => 'checkout', 'note' => '', 'x' => 50, 'y' => 20 );
 $h4 = wpfloors_shortcode();
 ok( false !== strpos( $h4, '<span class="wpfloors-sr">Checkout: </span><strong>Self Checkout</strong>' ) && false === strpos( $h4, '>Self Checkout</text>' ) && false !== strpos( $h4, '<span>Checkout</span>' ), 'checkout: listed, symbol only on the map, in the key' );
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't9', 'name' => 'Silent Reading Room', 'type' => 'quiet', 'note' => '', 'x' => 30, 'y' => 60 );
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' => 't10', 'name' => 'Snacks', 'type' => 'vending', 'note' => '', 'x' => 60, 'y' => 60 );
+$hq = wpfloors_shortcode();
+ok( false !== strpos( $hq, '<span class="wpfloors-sr">Quiet study: </span><strong>Silent Reading Room</strong>' ) && false !== strpos( $hq, '>Silent Reading Room</text>' ) && false !== strpos( $hq, '<span>Quiet study</span>' ), 'quiet study: listed under rooms and services, name on the map, in the key' );
+ok( false !== strpos( $hq, '<span class="wpfloors-sr">Vending machines: </span><strong>Snacks</strong>' ) && false === strpos( $hq, '>Snacks</text>' ) && false !== strpos( $hq, '<span>Vending machines</span>' ), 'vending machines: listed, symbol only on the map, in the key' );
+$tt = wpfloors_types();
+ok( 0 === strpos( $tt['studio']['icon'][2], 'M192 0C139 0 96 43 96 96l0 160' ) && 0 === strpos( $tt['quiet']['icon'][2], 'M301.1 34.8C312.6 40 320 51.4 ' ) && 0 === strpos( $tt['vending']['icon'][2], 'M257.5 27.6c-.8-5.4-4.9-9.8-10' ), 'studio microphone, quiet study muted speaker, vending cookie icons' );
+array_pop( $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'] );
+array_pop( $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'] );
 ok( array() === labs( array( lbl( array( 'type' => 'text' ) ) ) ), 'the removed Text only type is no longer accepted' );
 ok( array() === labs( array( lbl( array( 'type' => 'stairs' ) ) ) ), 'the removed Stairs type is no longer accepted' );
 ok( '2M-20' === labs( array( lbl( array( 'type' => 'office', 'number' => ' 2M-201<b>9' ) ) ) )[0]['number'], 'office number keeps letters, digits and hyphens, at most 5' );
