@@ -129,6 +129,12 @@ SVG exports of those five drawings were handed to the user in `Downloads\wallace
 - Phones: the drawing scales to the page width and can be pinch-zoomed. The page must never scroll
   sideways at 320px wide.
 - Nothing on the public map is interactive: no tab stops and no hover-only information.
+- axe (and wpa11y, which runs it) reports every map label as color-contrast "needs review"
+  (incomplete), never as a failure, because it can't measure SVG text over the map image. They
+  pass: black text on its own white paint-order outline is 21:1. It's not a bug, so don't re-triage
+  it or add boxes behind labels. Check the map by eye, then dismiss the warnings in wpa11y.
+  wpa11y keys a dismissal on post ID, rule and the exact selector, so each marker has a stable
+  `id="wpfloors-<floor>_<label id>"` (2.25.0) that axe builds its selector from. Keep that id.
 
 ### Left out on purpose
 Don't add any of these unless the user asks:
