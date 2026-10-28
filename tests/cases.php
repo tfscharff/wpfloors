@@ -251,6 +251,10 @@ $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'][] = array( 'id' =>
 $hq = wpfloors_shortcode();
 ok( false !== strpos( $hq, '<span class="wpfloors-sr">Quiet study: </span><strong>Silent Reading Room</strong>' ) && false !== strpos( $hq, '>Silent Reading Room</text>' ) && false !== strpos( $hq, '<span>Quiet study</span>' ), 'quiet study: listed under rooms and services, name on the map, in the key' );
 ok( false !== strpos( $hq, '<span class="wpfloors-sr">Vending machines: </span><strong>Snacks</strong>' ) && false === strpos( $hq, '>Snacks</text>' ) && false !== strpos( $hq, '<span>Vending machines</span>' ), 'vending machines: listed, symbol only on the map, in the key' );
+ok( false !== strpos( $hq, '<g class="mk" id="wpfloors-third_t10" ' ), 'each marker has a stable id from its floor and label id' );
+preg_match_all( '/ id="(wpfloors-[^"]*_[^"]*)"/', $hq, $mm );
+ok( count( $mm[1] ) > 1 && count( $mm[1] ) === count( array_unique( $mm[1] ) ), 'marker ids are unique on the page' );
+ok( false === strpos( wpfloors_marker( array( 'id' => 'z', 'type' => 'room', 'name' => 'A', 'number' => '', 'show' => true, 'pos' => 'right', 'x' => 5, 'y' => 5 ), array( 0, 0, 100, 100 ) ), ' id=' ), 'no floor, no marker id' );
 $tt = wpfloors_types();
 ok( 0 === strpos( $tt['studio']['icon'][2], 'M192 0C139 0 96 43 96 96l0 160' ) && 0 === strpos( $tt['quiet']['icon'][2], 'M301.1 34.8C312.6 40 320 51.4 ' ) && 0 === strpos( $tt['vending']['icon'][2], 'M257.5 27.6c-.8-5.4-4.9-9.8-10' ), 'studio microphone, quiet study muted speaker, vending cookie icons' );
 array_pop( $GLOBALS['wpf_options'][ WPFLOORS_OPTION ]['labels']['third'] );

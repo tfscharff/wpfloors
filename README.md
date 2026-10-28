@@ -17,7 +17,7 @@ also appears in the text list.
 
 ## Status
 
-2.24.0 is the current release. A fresh install has no floors and no maps.
+2.25.0 is the current release. A fresh install has no floors and no maps.
 
 ## Your SVG maps
 
@@ -45,6 +45,12 @@ also appears in the text list.
   **Across** and **Down** (percent of the map from the left and from the top).
 - After saving, purge your site's page cache if the public page doesn't show your change yet.
 - **Open full-size map** shows one floor on its own page (`/?wpfloors_map=<floor>`).
+- **Accessibility scanners** (axe, wpa11y) list every map label as a color-contrast warning that
+  "needs review". They can't measure text drawn over a map image. The labels pass: each one is black
+  on its own white outline (21:1), and the list under the map has the same text. Check the map by
+  eye, then dismiss the warnings. Each marker has a fixed id (`wpfloors-<floor>_<label id>`), so a
+  dismissal stays put when other labels change. A new or deleted-and-re-added label needs
+  dismissing once.
 
 ## Development
 
@@ -66,6 +72,13 @@ Download the zip from the latest GitHub release. In wp-admin, go to Plugins → 
 Plugin, choose the zip, then choose **Replace current** if it's already installed.
 
 ## Changelog
+
+### 2.25.0 (2026-10-28)
+
+- Each map marker has a fixed id, `wpfloors-<floor>_<label id>`, which survives renames, moves and
+  reordering. Accessibility scanners build their selectors from it, so dismissed axe "needs review"
+  contrast warnings for map labels stay dismissed when other labels change. Nothing looks different.
+- README explains why scanners flag map labels for review and why they pass.
 
 ### 2.24.0 (2026-10-20)
 

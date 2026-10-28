@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Floor Maps
  * Description:       Accessible floor maps for a library or any building. Staff upload an SVG map for each floor and add every label (rooms, collections, restrooms, exits and more) under Floor Maps in wp-admin. Show the maps with the [floor_maps] shortcode.
- * Version:           2.24.0
+ * Version:           2.25.0
  * Author:            Madeleine Clark Wallace Library
  * License:           GPL-2.0+
  * Requires at least: 5.6
@@ -351,8 +351,14 @@ function wpfloors_chars_width( $chars ) {
 	return $w;
 }
 
-/** One label on the map: its icon (or its characters) and name, in marker units (radius 1). */
-function wpfloors_marker( $lb, $vb ) {
+/**
+ * One label on the map: its icon (or its characters) and name, in marker units (radius 1).
+ * With a floor slug, the marker gets id="wpfloors-<floor>_<label id>". Both parts are saved and
+ * never change, so the id survives renames, moves and reordering. Accessibility scanners build
+ * their selectors from it, which keeps a dismissed axe "needs review" warning dismissed. The
+ * underscore can't appear in either part, so no two ids on the page can collide.
+ */
+function wpfloors_marker( $lb, $vb, $floor = '' ) {
 	$types = wpfloors_types();
 	if ( ! isset( $types[ $lb['type'] ] ) ) { return ''; }
 	$t     = $types[ $lb['type'] ];
@@ -373,7 +379,8 @@ function wpfloors_marker( $lb, $vb ) {
 	);
 	// Without its icon, the name is centered on the spot.
 	$at = $icon ? $at[ $lb['pos'] ] : array( '0', '0.36', 'nm mid' );
-	return '<g class="mk" transform="translate(' . wpfloors_num( $cx ) . ' ' . wpfloors_num( $cy ) . ') scale(' . wpfloors_num( $r ) . ')">'
+	$id = '' !== $floor && ! empty( $lb['id'] ) ? ' id="' . esc_attr( 'wpfloors-' . $floor . '_' . $lb['id'] ) . '"' : '';
+	return '<g class="mk"' . $id . ' transform="translate(' . wpfloors_num( $cx ) . ' ' . wpfloors_num( $cy ) . ') scale(' . wpfloors_num( $r ) . ')">'
 		. ( ! $icon ? '' : ( '' !== $chars ? '<text class="no" x="0" y="0.36" font-size="1">' . esc_html( $chars ) . '</text>' : wpfloors_icon_path( $t ) ) )
 		. ( $lb['show'] ? '<text class="' . $at[2] . '" x="' . $at[0] . '" y="' . $at[1] . '" font-size="1">' . esc_html( $lb['name'] ) . '</text>' : '' )
 		. '</g>';
@@ -394,14 +401,14 @@ function wpfloors_icon( $type, $number = '' ) {
 }
 
 /** A map as inline SVG, with its labels. $map comes from wpfloors_map(). */
-function wpfloors_svg( $map, $labels, $aria_label ) {
+function wpfloors_svg( $map, $labels, $aria_label, $floor = '' ) {
 	$out = '<svg class="wpfloors-svg" viewBox="' . esc_attr( $map['viewBox'] ) . '" role="img" aria-label="' . esc_attr( $aria_label ) . '" focusable="false">' . $map['body'];
 	// The labels are hidden from screen readers on purpose. The list under each map is the full
 	// text version of everything on it, so reading the labels here too would say everything
 	// twice. Keep aria-hidden on this group.
 	$out .= '<g class="wpfloors-labels" aria-hidden="true">';
 	foreach ( $labels as $lb ) {
-		$out .= wpfloors_marker( $lb, $map['vb'] );
+		$out .= wpfloors_marker( $lb, $map['vb'], $floor );
 	}
 	return $out . '</g></svg>';
 }
@@ -447,7 +454,7 @@ function wpfloors_floor_body( $floor, $labels, $h, $full_url ) {
 	$types = wpfloors_types();
 	$map   = wpfloors_map( $floor );
 	if ( $map ) {
-		$out = '<div class="wpfloors-map">' . wpfloors_svg( $map, $labels, $floor['name'] . ' floor map. Everything shown is listed below.' ) . '</div>';
+		$out = '<div class="wpfloors-map">' . wpfloors_svg( $map, $labels, $floor['name'] . ' floor map. Everything shown is listed below.', $floor['slug'] ) . '</div>';
 	} else {
 		$out      = '<p class="wpfloors-nomap">The map for this floor isn&#8217;t available yet.</p>';
 		$full_url = '';
