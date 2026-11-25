@@ -350,6 +350,95 @@ $GLOBALS['wpf_can'] = false;
 ob_start(); wpfloors_admin_page(); ok( '' === ob_get_clean(), 'admin page empty without edit_pages' );
 $GLOBALS['wpf_can'] = true;
 
+/* A name typed as entities is stored decoded, so it can really contain "</script>". */
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ] = array(
+	'floors' => array( fl() ),
+	'labels' => array( 'main' => array( lbl( array( 'name' => '&lt;/script&gt;&lt;script&gt;alert(1)&lt;/script&gt;', 'note' => '&lt;!-- x' ) ) ) ),
+);
+ok( '</script><script>alert(1)</script>' === wpfloors_get()['labels']['main'][0]['name'], 'entity-typed tags are stored as plain text' );
+ob_start(); wpfloors_admin_page(); $adm2 = ob_get_clean();
+$cfg = substr( $adm2, strpos( $adm2, 'window.WPFLOORS_ADMIN=' ) + 22 );
+$cfg = substr( $cfg, 0, strpos( $cfg, ';</script>' ) );
+$dec = json_decode( $cfg, true );
+ok( false === strpos( $cfg, '<' ) && is_array( $dec ) && '</script><script>alert(1)</script>' === $dec['labels']['main'][0]['name'] && '<!-- x' === $dec['labels']['main'][0]['note'], 'admin config with "</script>" in a name stays inside its script tag and decodes intact' );
+$hs = wpfloors_shortcode();
+ok( false === strpos( $hs, '<script' ) && false === strpos( $hs, '</script' ) && false !== strpos( $hs, '&lt;/script&gt;&lt;script&gt;alert(1)&lt;/script&gt;' ), 'public page shows "</script>" in a name as text' );
+
+/* Labels of a removed type still in the saved option (e.g. stairs before 2.11.0) are skipped, not drawn. */
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ] = array(
+	'floors' => array( fl() ),
+	'labels' => array( 'main' => array( lbl( array( 'id' => 'st', 'name' => 'East stairs', 'type' => 'stairs' ) ), lbl( array( 'id' => 'rm', 'name' => 'Study' ) ) ) ),
+);
+$hs = wpfloors_shortcode();
+ok( false === strpos( $hs, 'East stairs' ) && false === strpos( $hs, 'wpfloors-main_st' ) && false !== strpos( $hs, '<strong>Study</strong>' ), 'a saved label of a removed type is not shown; the rest are' );
+ok( '' === wpfloors_marker( array( 'type' => 'stairs', 'name' => 'S', 'number' => '', 'show' => true, 'pos' => 'right', 'x' => 1, 'y' => 1 ), array( 0, 0, 100, 100 ) ), 'a marker of an unknown type draws nothing' );
+
+/* SVG uploads are allowed for edit_pages users only. */
+$mimes = $GLOBALS['wpf_filters']['upload_mimes'][0];
+$ftype = $GLOBALS['wpf_filters']['wp_check_filetype_and_ext'][0];
+$none  = array( 'ext' => false, 'type' => false, 'proper_filename' => false );
+$got   = $mimes( array( 'png' => 'image/png' ) );
+ok( 'image/svg+xml' === $got['svg'] && 'image/png' === $got['png'], 'editors may upload .svg' );
+$r = $ftype( $none, '/tmp/php1', 'Map.SVG' );
+ok( 'svg' === $r['ext'] && 'image/svg+xml' === $r['type'], 'an editor\'s .svg file is typed as SVG' );
+ok( $none === $ftype( $none, '/tmp/php1', 'map.svg.php' ) && $none === $ftype( $none, '/tmp/php1', 'map.svgz' ), 'only names ending in .svg are typed as SVG' );
+$GLOBALS['wpf_can'] = false;
+ok( array( 'png' => 'image/png' ) === $mimes( array( 'png' => 'image/png' ) ), 'users without edit_pages may not upload .svg' );
+ok( $none === $ftype( $none, '/tmp/php1', 'map.svg' ), 'a .svg from a user without edit_pages is not typed as SVG' );
+$GLOBALS['wpf_can'] = true;
+
+/* Upload check edge cases. */
+$r = wpfloors_check_upload( array( 'name' => 'map.svg', 'tmp_name' => $GLOBALS['wpf_dir'] . '/missing.tmp', 'error' => 0 ) );
+ok( 'The file is empty.' === $r['error'], 'an SVG upload whose temp file is gone is refused' );
+ok( array( 'name' => 'map.svg' ) === wpfloors_check_upload( array( 'name' => 'map.svg' ) ), 'an upload array without a temp file is passed through' );
+
+/* More SVG cases: external links in any quoting, inline-style loads, other script schemes. */
+$bad2 = array(
+	'single-quoted xlink'  => "<svg viewBox='0 0 1 1'><use xlink:href='other.svg#a'/></svg>",
+	'relative href'        => '<svg viewBox="0 0 1 1"><image href="map.png"/></svg>',
+	'inline style url'     => '<svg viewBox="0 0 1 1"><rect style="fill:url( \'https://evil.test/p.svg#x\' )"/></svg>',
+	'vbscript'             => '<svg viewBox="0 0 1 1"><a href="#x" title="vbscript:x"><rect/></a></svg>',
+	'iframe'               => '<svg viewBox="0 0 1 1"><iframe/></svg>',
+	'object'               => '<svg viewBox="0 0 1 1"><object data="x"/></svg>',
+	'animate event'        => '<svg viewBox="0 0 1 1"><animate onbegin="alert(1)"/></svg>',
+	'entity in lower case' => '<!DOCTYPE svg [<!entity x "y">]><svg viewBox="0 0 1 1"/>',
+);
+foreach ( $bad2 as $what => $xml ) {
+	ok( '' !== wpfloors_svg_problem( $xml ), "unsafe SVG refused: $what" );
+}
+ok( '' === wpfloors_svg_problem( '<svg viewBox="0 0 1 1"><image href="data:image/jpeg;base64,AA"/><image xlink:href=\'data:image/webp;base64,AA\'/><rect fill="url(#g)"/><use href="#a"/></svg>' ), 'embedded JPEG and WebP, and internal links, pass' );
+
+/* "Open full-size map" handler: bails out quietly unless the floor exists. */
+$GLOBALS['wpf_options'][ WPFLOORS_OPTION ] = array( 'floors' => array( fl() ), 'labels' => array() );
+$tr = $GLOBALS['wpf_actions']['template_redirect'][0];
+$_GET = array();
+ob_start(); $tr(); ok( '' === ob_get_clean(), 'full-size handler does nothing on ordinary pages' );
+foreach ( array( 'nope', '../main/../x', array( 'main' ) ) as $q ) {
+	$_GET = array( 'wpfloors_map' => $q );
+	ob_start(); $tr(); ok( '' === ob_get_clean(), 'full-size handler ignores an unknown or junk floor' );
+}
+$_GET = array();
+
+/*
+ * Floor slugs are cut to 40 characters, but the suffix that makes a duplicate unique is added after
+ * the cut, so a stored slug can be 42 characters. The next sanitize cuts it back to 40.
+ */
+$long = str_repeat( 'a', 40 );
+$s1   = wpfloors_sanitize( array( 'floors' => array( fl( array( 'slug' => $long, 'name' => 'A' ) ), fl( array( 'slug' => $long, 'name' => 'B' ) ) ), 'labels' => array() ) );
+ok( $long . '-2' === $s1['floors'][1]['slug'], 'a duplicate 40-character slug gets its suffix past 40 characters' );
+ok( wpfloors_sanitize( $s1 ) === $s1, 'saving again in the same order keeps both slugs' );
+// CURRENT BEHAVIOUR (suspected bug): with the first floor deleted, the second floor's slug changes
+// from aaaa…-2 to aaaa…, so its labels (keyed by the old slug) are dropped.
+$s2 = wpfloors_sanitize( array( 'floors' => array( $s1['floors'][1] ), 'labels' => array( $long . '-2' => array( lbl() ) ) ) );
+ok( $long === $s2['floors'][0]['slug'] && array() === $s2['labels'][ $long ], 'CURRENT BEHAVIOUR (suspected bug): deleting the first of two long-slug floors drops the second floor\'s labels' );
+// CURRENT BEHAVIOUR (suspected bug): moving the second floor above the first swaps their slugs,
+// so each floor gets the other's labels.
+$s3 = wpfloors_sanitize( array(
+	'floors' => array( $s1['floors'][1], $s1['floors'][0] ),
+	'labels' => array( $long => array( lbl( array( 'name' => 'A room' ) ) ), $long . '-2' => array( lbl( array( 'name' => 'B room' ) ) ) ),
+) );
+ok( 'B' === $s3['floors'][0]['name'] && $long === $s3['floors'][0]['slug'] && 'A room' === $s3['labels'][ $long ][0]['name'], 'CURRENT BEHAVIOUR (suspected bug): reordering two long-slug floors swaps their labels' );
+
 /* ---------------- previews ---------------- */
 
 if ( isset( $argv[1] ) ) {
