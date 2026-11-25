@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 (library.wheatoncollege.edu, WP Engine) but usable by any site. Staff add floors, upload an SVG map
 for each one, and add every label themselves in wp-admin. It is the fourth in-house plugin, after
 `wphours` (Library Hours), `wprooms` (Reserve a Room) and the librarians plugin. Copy their
-conventions, especially `Documents\wphours\CLAUDE.md`.
+conventions, especially `C:\Users\thoma\repos\wphours\CLAUDE.md`.
 
 Name everything `wpfloors`: the file, the zip folder, the `wpfloors_` PHP prefix, the option, the
 REST namespace and the CSS classes. Never use an `mcw` prefix, even though the sister plugins do.
